@@ -1,0 +1,14 @@
+{
+    "version": "1.0.0",
+    "manifest_version": 3,
+    "name": "Survey Filler",
+    "description": "This is a Chrome extension built with React and TypeScript",
+    "action": {
+        "default_popup": "js/index.html",
+        "default_title": "Survey Filler Popup"
+    },
+    "icons": {
+        "48": "icons/icon48.jpeg",
+        "128": "icons/icon128.jpeg"
+    }
+}
