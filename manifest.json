@@ -4,11 +4,25 @@
     "name": "Survey Filler",
     "description": "This is a Chrome extension built with React and TypeScript",
     "action": {
-        "default_popup": "js/index.html",
-        "default_title": "Survey Filler Popup"
+        "default_title": "Click to open panel"
     },
+    "side_panel": {
+        "default_path": "js/index.html"
+    },
+    "background": {
+        "service_worker": "background.js"
+    },
+    "permissions": [
+        "activeTab",
+        "scripting",
+        "tabs",
+        "sidePanel"
+    ],
+    "host_permissions": [
+        "*://*/*"
+    ],
     "icons": {
-        "48": "icons/icon48.jpeg",
-        "128": "icons/icon128.jpeg"
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
     }
 }

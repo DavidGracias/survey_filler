@@ -1,8 +1,10 @@
 import { ThemeProvider } from '@emotion/react';
 import { CssBaseline, Container, createTheme } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import GenericSurvey from './components/GenericSurvey';
-import Example from './components/Example';
+import Unknown from './components/Unknown';
+import { Information, People } from './types/Information';
+import ComponentProps from './types/ComponentProps';
 
 const darkTheme = createTheme({
   palette: {
@@ -22,11 +24,7 @@ const Sites: { urlfragments: string[]; Component: React.ComponentType<ComponentP
   {
     urlfragments: ["surveymonkey"],
     Component: GenericSurvey,
-  },
-  {
-    urlfragments: [],
-    Component: Example,
-  },
+  }
 ];
 const targetUrls = Sites.flatMap(site => site.urlfragments);
 
@@ -37,7 +35,7 @@ export default function App() {
 
   const updateTabInformation = (tab: chrome.tabs.Tab) => {
     // Unable to get tab information
-    if (!tab || !tab.id || !tab.url || tab.url.startsWith("chrome://")) {
+    if (!tab || !tab.id || !tab.url || tab.url?.startsWith("chrome://")) {
       setBody(defaultBody);
       setUrl(defaultUrl);
       setTabId(defaultTabId);
@@ -70,16 +68,19 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [count]);
 
-  const [Component, setComponent] = useState<React.ComponentType<ComponentProps>>(Example);
-  useEffect(() => {
-    if (url === defaultUrl) return;
-    for (let i = 0; i < Sites.length; ++i) {
-      const site = Sites[i];
-      for (let j = 0; j < site.urlfragments.length; ++j) {
-        if (url.includes(site.urlfragments[j]))
-          return setComponent(site.Component);
+
+  const Component: React.ComponentType<ComponentProps> = useMemo(() => {
+    if (url !== undefined) {
+      for (let i = 0; i < Sites.length; ++i) {
+        const site = Sites[i];
+        for (let j = 0; j < site.urlfragments.length; ++j) {
+          if (url.includes(site.urlfragments[j])) {
+            return site.Component; // Return the matched component
+          }
+        }
       }
     }
+    return Unknown
   }, [url]);
 
   return (
@@ -87,8 +88,11 @@ export default function App() {
       <CssBaseline />
       <Container sx={{ minWidth: "300px", padding: "10px" }}>
         {/* Pass props to the dynamically rendered component */}
-        <Component url={url} body={body} tabId={tabId} />
+        <Component url={url} body={body} tabId={tabId} information={INFORMATION} />
       </Container>
     </ThemeProvider>
   );
 }
+
+// Change if Bela:
+const INFORMATION = new Information(People.David)
