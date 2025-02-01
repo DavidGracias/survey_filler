@@ -5,6 +5,7 @@ import GenericSurvey from './components/GenericSurvey';
 import Unknown from './components/Unknown';
 import { Information, People } from './types/Information';
 import ComponentProps from './types/ComponentProps';
+import PanelFox from './components/PanelFox';
 
 const darkTheme = createTheme({
   palette: {
@@ -21,6 +22,10 @@ const defaultTabId = 0;
 
 // App will load the first component whose url-fragments are part of the url
 const Sites: { urlfragments: string[]; Component: React.ComponentType<ComponentProps> }[] = [
+  {
+    urlfragments: ["panelfox.io"],
+    Component: PanelFox,
+  },
   {
     urlfragments: ["surveymonkey"],
     Component: GenericSurvey,
@@ -44,13 +49,19 @@ export default function App() {
     // Shouldn't get tab information (ex. programatic tab open)
     if (["", "about:blank"].includes(tab.url)) return;
 
-    if (!targetUrls.includes(tab.url)) return setUrl(tab.url!);
-
-    chrome.scripting.executeScript({
-      target: { tabId: tab.id! },
-      func: () => document.querySelector("body")!.outerHTML,
-    }).then((results) => setBody(results[0].result!));
+    targetUrls.some((targetUrl) => {
+      if (tab.url!.includes(targetUrl)) {
+        chrome.scripting.executeScript({
+          target: { tabId: tab.id! },
+          func: () => document.querySelector("body")!.outerHTML,
+        }).then((results) => setBody(results[0].result!));
+        return true;
+      }
+    });
+    setUrl(tab.url!);
+    setTabId(tab.id!);
   };
+
   const queryActiveTabCallback = (callback: (tab: chrome.tabs.Tab) => void) =>
     chrome.tabs.query({ active: true, lastFocusedWindow: true }, ([firstTabResult]) => callback(firstTabResult));
 

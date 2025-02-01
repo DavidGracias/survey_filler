@@ -5,7 +5,7 @@ import ComponentProps from '../types/ComponentProps';
 export default function Unknown({ url, body, tabId, information }: ComponentProps) {
   return (
     <Container sx={{ minWidth: "300px", padding: "10px" }}>
-      Unknown survey {url} will need to be implemented still
+      Unknown url ({url}) will need to be implemented still
     </Container>
   );
 }
