@@ -5,6 +5,7 @@ import { DEBUG_MODE } from "../App";
 import GenericSurvey from "./GenericSurvey";
 import PRC from "../surveyAnswers/PRC";
 import SurveyAnswers from "../types/SurveyAnswers";
+import PanelFox from "../surveyAnswers/PanelFox";
 
 enum SurveyProviders {
   PRC,
@@ -15,8 +16,8 @@ enum SurveyProviders {
 
 const surveyAnswers: Record<SurveyProviders, SurveyAnswers | undefined> = {
   [SurveyProviders.PRC]: PRC,
-  [SurveyProviders.FieldWork]: PRC,
-  [SurveyProviders.Hilton]: PRC,
+  [SurveyProviders.FieldWork]: PanelFox,
+  [SurveyProviders.Hilton]: undefined,
   [SurveyProviders.Unknown]: undefined,
 };
 
@@ -26,14 +27,21 @@ export default function SurveyPicker({
   tabId,
   information,
 }: Omit<ComponentProps, "surveyAnswer">) {
-  const [SurveyProvider, setSurveyProvider] = useState<SurveyProviders>(
-    SurveyProviders.Unknown
-  );
+  const [surveyProvider, setSurveyProvider] = useState<SurveyProviders>(SurveyProviders.Unknown);
+  const [surveyAnswer, setSurveyAnswer] = useState<SurveyAnswers | undefined>(undefined);
 
-  const surveyAnswer = useMemo(
-    () => surveyAnswers[SurveyProvider],
-    [SurveyProvider]
-  );
+  useEffect(() => {
+    const fetchSurveyAnswer = async () => {
+      const surveyAnswer = surveyAnswers[surveyProvider];
+
+      if (surveyAnswer !== undefined)
+        await surveyAnswer.waitForAllPages();
+      
+      setSurveyAnswer(surveyAnswer);
+    };
+
+    fetchSurveyAnswer();
+  }, [surveyProvider]);
 
   const SurveyComponent = useMemo(() => {
     if (surveyAnswer === undefined)
