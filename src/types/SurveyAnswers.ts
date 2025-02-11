@@ -7,6 +7,7 @@ export type Page = { text: PageText, action: PageAction };
 
 class SurveyAnswers {
   private pages: Page[] = [];
+  private pagePromises: Promise<void>[] = [];
 
   nextButtonQuery: string;
 
@@ -21,11 +22,16 @@ class SurveyAnswers {
   }
 
   addPage(pageText: PageText, pageAction: PageAction): void {
-    if (this.pages.some(page => this.isPageMatch(page.text, pageText.join(' ')))) {
-      throw new Error("Page already exists for: " + pageText);
-    }
-    this.pages.push({ text: pageText, action: pageAction });
-    console.log("Added page:", pageText);
+    const pagePromise = new Promise<void>((resolve, reject) => {
+      if (this.pages.some(page => this.isPageMatch(page.text, pageText.join(' ')))) {
+        reject(new Error("Page already exists for: " + pageText));
+      } else {
+        this.pages.push({ text: pageText, action: pageAction });
+        resolve();
+      }
+    });
+
+    this.pagePromises.push(pagePromise);
   }
 
   getPageFromBody(body: string): Page | undefined {
@@ -47,6 +53,9 @@ class SurveyAnswers {
     return true;
   }
 
+  async waitForAllPages(): Promise<void> {
+    await Promise.all(this.pagePromises);
+  }
 }
 
 export default SurveyAnswers;
