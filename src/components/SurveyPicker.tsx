@@ -36,7 +36,7 @@ export default function SurveyPicker({
 
       if (surveyAnswer !== undefined)
         await surveyAnswer.waitForAllPages();
-      
+
       setSurveyAnswer(surveyAnswer);
     };
 

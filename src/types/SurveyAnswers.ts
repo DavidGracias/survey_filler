@@ -36,7 +36,6 @@ class SurveyAnswers {
 
   getPageFromBody(body: string): Page | undefined {
     for (let page of this.pages) {
-      window.alert("trying to match pages: " + page.text);
       if (this.isPageMatch(page.text, body)) return page;
     }
 

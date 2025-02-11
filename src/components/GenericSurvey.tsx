@@ -9,15 +9,14 @@ export default function GenericSurvey({ url, body, tabId, information, surveyAns
   const [page, setPage] = useState<Page>();
 
   useEffect(() => {
-    console.log("SurveyAnswer object received:", surveyAnswer);
+    if (!DEBUG_MODE) return;
+    
     window.alert("Print pages now...");
     surveyAnswer.printPages();
   }, []);
 
   useEffect(() => {
-    window.alert("body changed!");
     const page = surveyAnswer.getPageFromBody(body);
-    if (page === undefined) return;
     setPage(page);
   }, [body]);
 
