@@ -1,7 +1,6 @@
 import { Button, Container } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import ComponentProps from "../types/ComponentProps";
-import { DEBUG_MODE } from "../App";
 import GenericSurvey from "./GenericSurvey";
 import PRC from "../surveyAnswers/PRC";
 import SurveyAnswers from "../types/SurveyAnswers";
@@ -27,15 +26,16 @@ export default function SurveyPicker({
   tabId,
   information,
 }: Omit<ComponentProps, "surveyAnswer">) {
-  const [surveyProvider, setSurveyProvider] = useState<SurveyProviders>(SurveyProviders.Unknown);
-  const [surveyAnswer, setSurveyAnswer] = useState<SurveyAnswers | undefined>(undefined);
+  const [surveyProvider, setSurveyProvider] = useState<SurveyProviders>(
+    SurveyProviders.Unknown
+  );
+  const [surveyAnswer, setSurveyAnswer] = useState<SurveyAnswers>();
 
   useEffect(() => {
     const fetchSurveyAnswer = async () => {
       const surveyAnswer = surveyAnswers[surveyProvider];
 
-      if (surveyAnswer !== undefined)
-        await surveyAnswer.waitForAllPages();
+      if (surveyAnswer !== undefined) await surveyAnswer.waitForAllPages();
 
       setSurveyAnswer(surveyAnswer);
     };
@@ -66,7 +66,10 @@ export default function SurveyPicker({
   return (
     <Container>
       <Container>
-        {Object.values(SurveyProviders).filter((value): value is SurveyProviders => typeof value === "number")
+        {Object.values(SurveyProviders)
+          .filter(
+            (value): value is SurveyProviders => typeof value === "number"
+          )
           .map((provider: SurveyProviders) => (
             <Button
               key={provider}
@@ -85,33 +88,7 @@ export default function SurveyPicker({
         >
           Reset
         </Button>
-        {DEBUG_MODE && (
-          <>
-            <br />
-            <br />
-            <Button
-              variant="contained"
-              onClick={() => {
-                chrome.scripting.executeScript({
-                  target: { tabId: tabId },
-                  func: () => {
-                    const nextButtonQuery = "button.next-button";
-                    (
-                      document.querySelector(
-                        nextButtonQuery
-                      ) as HTMLButtonElement
-                    ).click();
-                  },
-                });
-              }}
-              style={{ margin: "5px" }}
-            >
-              Manually Trigger Next
-            </Button>
-          </>
-        )}
       </Container>
-
       {SurveyComponent}
     </Container>
   );

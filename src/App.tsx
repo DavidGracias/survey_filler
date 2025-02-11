@@ -75,12 +75,12 @@ export default function App() {
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
       <Container sx={{ minWidth: "300px", padding: "10px" }}>
-        <SurveyPicker
+        { (body != defaultBody) && <SurveyPicker
           url={url}
           body={body}
           tabId={tabId}
           information={INFORMATION}
-        />
+        />}
       </Container>
     </ThemeProvider>
   );

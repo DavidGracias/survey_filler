@@ -1,7 +1,7 @@
 import { Information } from "./Information";
 
 type PageText = string[];
-type PageAction = (information: Information) => void;
+export type PageAction = (information: Information) => void;
 
 export type Page = { text: PageText, action: PageAction };
 
@@ -16,9 +16,11 @@ class SurveyAnswers {
   }
 
   printPages(): void {
+    let alertMessage = "";
     for (let page of this.pages) {
-      window.alert("Text for page: " + page.text);
+      alertMessage += page.text.join("\n") + "\n\n---\n";
     }
+    window.alert("Survey Pages:" + alertMessage);
   }
 
   addPage(pageText: PageText, pageAction: PageAction): void {

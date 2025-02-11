@@ -1,21 +1,29 @@
-import { Container } from '@mui/material';
-import React, { useEffect, useMemo, useState } from 'react';
-import ComponentProps from '../types/ComponentProps';
-import { DEBUG_MODE } from '../App';
-import { Page } from '../types/SurveyAnswers';
-import { Information } from '../types/Information';
+import { Button, Container, Typography } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import ComponentProps from "../types/ComponentProps";
+import { DEBUG_MODE } from "../App";
+import { Page } from "../types/SurveyAnswers";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemText from "@mui/material/ListItemText";
 
-export default function GenericSurvey({ url, body, tabId, information, surveyAnswer }: ComponentProps) {
+export default function GenericSurvey({
+  url,
+  body,
+  tabId,
+  information,
+  surveyAnswer,
+}: ComponentProps) {
   const [page, setPage] = useState<Page>();
 
   useEffect(() => {
     if (!DEBUG_MODE) return;
-    
-    window.alert("Print pages now...");
-    surveyAnswer.printPages();
+
+    // surveyAnswer.printPages();
   }, []);
 
   useEffect(() => {
+    window.alert("body changed");
     const page = surveyAnswer.getPageFromBody(body);
     setPage(page);
   }, [body]);
@@ -23,34 +31,81 @@ export default function GenericSurvey({ url, body, tabId, information, surveyAns
   useEffect(() => {
     if (page === undefined) return;
 
-    chrome.scripting.executeScript({
-      target: { tabId: tabId },
-      func: (information: Information, cancel_next: boolean) => {
-        page.action(information);
-        
-        if ( cancel_next ) return; // don't auto-continue if in debug mode
-        setTimeout(() => {
-          (document.querySelector(surveyAnswer.nextButtonQuery) as HTMLButtonElement).click();
-        }, 1e3);
-      },
-      args: [information, DEBUG_MODE],
-    });
+    chrome.scripting
+      .executeScript({
+        target: { tabId: tabId },
+        func: page.action,
+        args: [information],
+      })
+      .then(() => {
+        chrome.scripting.executeScript({
+          target: { tabId: tabId },
+          func: (DEBUG_MODE: boolean, nextButtonQuery: string) => {
+            if (DEBUG_MODE) return; // don't auto-continue if in debug mode
+            const nextButton = document.querySelector(
+              nextButtonQuery
+            ) as HTMLButtonElement;
+            setTimeout(() => nextButton.click(), 1e3);
+          },
+          args: [DEBUG_MODE, surveyAnswer.nextButtonQuery],
+        });
+      });
   }, [page]);
 
   return (
     <Container>
-      { (page === undefined) ?
-      <>
-        Unable to load / find page related to the survey. Please try again.
-        Here's a snippet of the body: `{body.slice(0, 100)}`
+      {page === undefined ? (
+        <>
+          <Typography variant="h5">
+            Unable to load / find page related to the survey. Please try again.
+          </Typography>
 
-        Debugging:
-      </>
-      : // page is defined
-      <>
-        Currently handling page associated with this text: `{page.text.join(", ")}`
-      </>
-      }
+          <Typography>
+            Debugging mode: {DEBUG_MODE ? "enabled" : "disabled"}
+          </Typography>
+
+          <Typography>
+            Here's a snippet of the body: `{body.slice(0, 100)}`
+          </Typography>
+        </>
+      ) : (
+        // page is defined
+        <>
+          {DEBUG_MODE && (
+            <Button
+              variant="contained"
+              onClick={() =>
+                chrome.scripting.executeScript({
+                  target: { tabId: tabId },
+                  func: (nextButtonQuery: string) =>
+                    (
+                      document.querySelector(
+                        nextButtonQuery
+                      ) as HTMLButtonElement
+                    ).click(),
+                  args: [surveyAnswer.nextButtonQuery],
+                })
+              }
+              style={{ margin: "5px" }}
+            >
+              Manually Trigger Next
+            </Button>
+          )}
+          <Typography variant="h5">
+            Currently handling page associated with this text:
+          </Typography>
+
+          <Typography variant="body2">{page.action.toString()}</Typography>
+
+          <List>
+            {page.text.map((question) => (
+              <ListItem dense={true}>
+                <ListItemText primary={question} />
+              </ListItem>
+            ))}
+          </List>
+        </>
+      )}
     </Container>
   );
 }

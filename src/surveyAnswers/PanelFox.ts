@@ -14,6 +14,7 @@ PanelFox.addPage(
   ],
   (information: Information) => {
     const inputs = document.querySelectorAll("input[placeholder='Your answer']")!;
+
     var answers = [
       information.firstName,
       information.lastName,
@@ -141,7 +142,5 @@ PanelFox.addPage(
     });
   }
 );
-
-PanelFox.printPages();
 
 export default PanelFox;
