@@ -8,6 +8,33 @@ PanelFox.addPage(
     "First Name",
     "Last Name",
     "Email",
+    "Phone Number",
+    "Do you certify that the information you provide on this survey is true and accurate? By consenting you confirm that you understand that false representation will result in dismissal without pay if selected for the study.",
+    "How did you hear about this study?",
+  ],
+  (information: Information) => {
+    const inputs = document.querySelectorAll("input[placeholder='Your answer']")!;
+    var answers = [
+      information.firstName,
+      information.lastName,
+      information.email,
+      information.phone,
+    ];
+    for (let i = 0; i < inputs.length; i++)
+      (inputs[i] as HTMLInputElement).value = answers[i];
+    
+
+    const radios = document.querySelectorAll("div.option-label__tag")!;
+    (radios[0] as HTMLInputElement).click();
+    (radios[2] as HTMLInputElement).click();
+  }
+);
+
+PanelFox.addPage(
+  [
+    "First Name",
+    "Last Name",
+    "Email",
     "Cell Phone Number",
     "Alternate Phone Number",
     "In what state do you reside?",
@@ -114,5 +141,7 @@ PanelFox.addPage(
     });
   }
 );
+
+PanelFox.printPages();
 
 export default PanelFox;

@@ -2,19 +2,23 @@ import { Container } from '@mui/material';
 import React, { useEffect, useMemo, useState } from 'react';
 import ComponentProps from '../types/ComponentProps';
 import { DEBUG_MODE } from '../App';
-import { PageAction, PageText } from '../types/SurveyAnswers';
-
-type Page = {text: PageText, action: PageAction};
+import { Page } from '../types/SurveyAnswers';
+import { Information } from '../types/Information';
 
 export default function GenericSurvey({ url, body, tabId, information, surveyAnswer }: ComponentProps) {
   const [page, setPage] = useState<Page>();
 
   useEffect(() => {
-    window.alert("body changed!")
-    const pageTextAction = surveyAnswer.getPageTextActionFromBody(body);
-    if (pageTextAction === undefined) return;
-    const [pageText, pageAction] = pageTextAction;
-    setPage({ text: pageText, action: pageAction, });
+    console.log("SurveyAnswer object received:", surveyAnswer);
+    window.alert("Print pages now...");
+    surveyAnswer.printPages();
+  }, []);
+
+  useEffect(() => {
+    window.alert("body changed!");
+    const page = surveyAnswer.getPageFromBody(body);
+    if (page === undefined) return;
+    setPage(page);
   }, [body]);
 
   useEffect(() => {
@@ -22,15 +26,15 @@ export default function GenericSurvey({ url, body, tabId, information, surveyAns
 
     chrome.scripting.executeScript({
       target: { tabId: tabId },
-      func: (information) => {
+      func: (information: Information, cancel_next: boolean) => {
         page.action(information);
         
-        if ( DEBUG_MODE ) return; // don't auto-continue if in debug mode
+        if ( cancel_next ) return; // don't auto-continue if in debug mode
         setTimeout(() => {
           (document.querySelector(surveyAnswer.nextButtonQuery) as HTMLButtonElement).click();
         }, 1e3);
       },
-      args: [information],
+      args: [information, DEBUG_MODE],
     });
   }, [page]);
 
