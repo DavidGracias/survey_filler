@@ -1,10 +1,22 @@
-import { Button, Container } from "@mui/material";
+import {
+  Collapse,
+  Container,
+  Divider,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+} from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import ComponentProps from "../types/ComponentProps";
 import GenericSurvey from "./GenericSurvey";
 import PRC from "../surveyAnswers/PRC";
 import SurveyAnswers from "../types/SurveyAnswers";
 import PanelFox from "../surveyAnswers/PanelFox";
+import { defaultBody } from "../App";
+import { StarBorder } from "@mui/icons-material";
+import ExpandLess from "@mui/icons-material/ExpandLess";
+import ExpandMore from "@mui/icons-material/ExpandMore";
 
 enum SurveyProviders {
   PRC,
@@ -30,13 +42,22 @@ export default function SurveyPicker({
     SurveyProviders.Unknown
   );
   const [surveyAnswer, setSurveyAnswer] = useState<SurveyAnswers>();
+  const [openSurveyProviderDropdown, setOpenSurveyProviderDropdown] =
+    useState(true);
+
+  useEffect(() => {
+    if (body == defaultBody)
+      if (url.includes("panelfox.io/s/FieldGoals"))
+        setSurveyProvider(SurveyProviders.FieldWork);
+  }, [body, url]);
 
   useEffect(() => {
     const fetchSurveyAnswer = async () => {
       const surveyAnswer = surveyAnswers[surveyProvider];
-
-      if (surveyAnswer !== undefined) await surveyAnswer.waitForAllPages();
-
+      if (surveyAnswer !== undefined) {
+        await surveyAnswer.waitForAllPages();
+        setOpenSurveyProviderDropdown(false);
+      }
       setSurveyAnswer(surveyAnswer);
     };
 
@@ -64,32 +85,46 @@ export default function SurveyPicker({
   }, [surveyAnswer]);
 
   return (
-    <Container>
-      <Container>
-        {Object.values(SurveyProviders)
-          .filter(
-            (value): value is SurveyProviders => typeof value === "number"
-          )
-          .map((provider: SurveyProviders) => (
-            <Button
-              key={provider}
-              variant="contained"
-              onClick={() => setSurveyProvider(provider)}
-              style={{ margin: "5px" }}
-            >
-              {SurveyProviders[provider]}
-            </Button>
-          ))}
-        <Button
-          key={"reset"}
-          variant="contained"
-          onClick={() => setSurveyProvider(SurveyProviders.Unknown)}
-          style={{ margin: "5px" }}
+    <>
+      <Container sx={{ margin: "10px 0px" }}>
+        <ListItemButton
+          onClick={() =>
+            setOpenSurveyProviderDropdown(!openSurveyProviderDropdown)
+          }
         >
-          Reset
-        </Button>
+          <ListItemText primary={SurveyProviders[surveyProvider]} />
+          {openSurveyProviderDropdown ? <ExpandLess /> : <ExpandMore />}
+        </ListItemButton>
+        <Collapse in={openSurveyProviderDropdown} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            {Object.values(SurveyProviders)
+              .filter(
+                (value): value is SurveyProviders => typeof value === "number"
+              )
+              .map((provider: SurveyProviders) => (
+                <ListItemButton
+                  onClick={() => setSurveyProvider(provider)}
+                  key={provider}
+                >
+                  <ListItemIcon>
+                    {provider == surveyProvider && <StarBorder />}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={
+                      SurveyProviders[provider] ==
+                      SurveyProviders[SurveyProviders.Unknown]
+                        ? "Unset"
+                        : SurveyProviders[provider]
+                    }
+                  />
+                </ListItemButton>
+              ))}
+          </List>
+        </Collapse>
       </Container>
+      <Divider />
+
       {SurveyComponent}
-    </Container>
+    </>
   );
 }

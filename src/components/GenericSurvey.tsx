@@ -1,4 +1,4 @@
-import { Button, Container, Typography } from "@mui/material";
+import { Button, Container, Divider, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import ComponentProps from "../types/ComponentProps";
 import { DEBUG_MODE } from "../App";
@@ -23,7 +23,7 @@ export default function GenericSurvey({
   }, []);
 
   useEffect(() => {
-    window.alert("body changed");
+    window.alert("GenericSurvey -> body changed");
     const page = surveyAnswer.getPageFromBody(body);
     setPage(page);
   }, [body]);
@@ -72,24 +72,27 @@ export default function GenericSurvey({
         // page is defined
         <>
           {DEBUG_MODE && (
-            <Button
-              variant="contained"
-              onClick={() =>
-                chrome.scripting.executeScript({
-                  target: { tabId: tabId },
-                  func: (nextButtonQuery: string) =>
-                    (
-                      document.querySelector(
-                        nextButtonQuery
-                      ) as HTMLButtonElement
-                    ).click(),
-                  args: [surveyAnswer.nextButtonQuery],
-                })
-              }
-              style={{ margin: "5px" }}
-            >
-              Manually Trigger Next
-            </Button>
+            <>
+              <Button
+                sx={{ display: "block", margin: "10px auto" }}
+                variant="contained"
+                onClick={() =>
+                  chrome.scripting.executeScript({
+                    target: { tabId: tabId },
+                    func: (nextButtonQuery: string) =>
+                      (
+                        document.querySelector(
+                          nextButtonQuery
+                        ) as HTMLButtonElement
+                      ).click(),
+                    args: [surveyAnswer.nextButtonQuery],
+                  })
+                }
+              >
+                Manually Trigger Next
+              </Button>
+              <Divider />
+            </>
           )}
           <Typography variant="h5">
             Currently handling page associated with this text:

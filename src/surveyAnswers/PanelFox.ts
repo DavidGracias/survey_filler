@@ -62,6 +62,14 @@ PanelFox.addPage(
 );
 
 PanelFox.addPage(
+  ["What state do you reside?"],
+  (information: Information) => {
+    var state = (information.state.substring(0, 1).toUpperCase() + information.state.substring(1).toLowerCase());
+    (document.querySelector("select") as HTMLSelectElement).value = state;
+  }
+);
+
+PanelFox.addPage(
   ["What is your date of birth?"],
   (information: Information) => {
     const input: HTMLInputElement = document.querySelector("input")!;

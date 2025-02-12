@@ -1,12 +1,21 @@
 import { ThemeProvider } from "@emotion/react";
-import { CssBaseline, Container, createTheme } from "@mui/material";
+import {
+  CssBaseline,
+  Container,
+  createTheme,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Collapse,
+  Divider,
+} from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import { Information, People } from "./types/Information";
 import SurveyPicker from "./components/SurveyPicker";
-
-// Change if Bela:
-const INFORMATION = new Information(People.David);
-export const DEBUG_MODE: boolean = true;
+import StarIcon from "@mui/icons-material/Star";
+import { Block, ExpandLess, ExpandMore } from "@mui/icons-material";
 
 const darkTheme = createTheme({
   palette: {
@@ -17,9 +26,9 @@ const darkTheme = createTheme({
   },
 });
 
-const defaultBody = "<html></html>";
 const defaultUrl = "";
 const defaultTabId = 0;
+export const defaultBody = "<html></html>";
 
 export default function App() {
   const [body, setBody] = useState<string>(defaultBody);
@@ -42,7 +51,13 @@ export default function App() {
         target: { tabId: tab.id! },
         func: () => document.querySelector("body")!.outerHTML,
       })
-      .then((results) => setBody(results[0].result!));
+      .then((results) => {
+        const updatedBody = results[0].result!;
+        if (body != updatedBody) {
+          window.alert("here updated body");
+          setBody(updatedBody);
+        }
+      });
     setUrl(tab.url!);
     setTabId(tab.id!);
   };
@@ -71,17 +86,49 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [count]);
 
+  // app specific code
+  const [user, setUser] = useState<People>(People.David);
+  const [openUserDropdown, setOpenUserDropdown] = useState(false);
+
   return (
     <ThemeProvider theme={darkTheme}>
       <CssBaseline />
-      <Container sx={{ minWidth: "300px", padding: "10px" }}>
-        { (body != defaultBody) && <SurveyPicker
+      <Container sx={{ minWidth: "300px", padding: "0 10px 10px 10px" }}>
+        <Container sx={{ margin: "10px 0px" }}>
+          <ListItemButton
+            onClick={() => setOpenUserDropdown(!openUserDropdown)}
+          >
+            <ListItemText primary={People[user]} />
+            {openUserDropdown ? <ExpandLess /> : <ExpandMore />}
+          </ListItemButton>
+          <Collapse in={openUserDropdown} timeout="auto" unmountOnExit>
+            <List>
+              {Object.values(People)
+                .filter((value): value is People => typeof value !== "string")
+                .map((person: People) => (
+                  <ListItem key={person} disablePadding>
+                    <ListItemButton onClick={() => {setUser(person); setOpenUserDropdown(false);}}>
+                      <ListItemIcon>
+                        {person === user && <StarIcon />}
+                      </ListItemIcon>
+                      <ListItemText primary={People[person]} />
+                    </ListItemButton>
+                  </ListItem>
+                ))}
+            </List>
+          </Collapse>
+        </Container>
+        <Divider />
+        <SurveyPicker
           url={url}
           body={body}
           tabId={tabId}
-          information={INFORMATION}
-        />}
+          information={useMemo(() => new Information(user), [user])}
+        />
       </Container>
     </ThemeProvider>
   );
 }
+
+// other exports
+export const DEBUG_MODE: boolean = true;
