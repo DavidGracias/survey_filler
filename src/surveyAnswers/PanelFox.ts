@@ -3,6 +3,20 @@ import { Information } from "../types/Information";
 
 const PanelFox = new SurveyAnswers("button");
 
+function selectAnswerWithText(needles: string[]) {
+  needles = needles.map((n) => n.trim().toLowerCase());
+  document.querySelectorAll(".option-label__tag").forEach((option_label) => {
+    const haystack = option_label.textContent!.trim().toLowerCase();
+    var found = true;
+    needles.forEach((needle) => (found &&= haystack.includes(needle)));
+    if (found) (option_label as HTMLDivElement).click();
+  });
+}
+
+function selectAnswerAtIndex(index: number) {
+  (document.querySelectorAll(".option-label__tag")[index] as HTMLDivElement).click();
+}
+
 PanelFox.addPage(
   [
     "First Name",
@@ -13,7 +27,9 @@ PanelFox.addPage(
     "How did you hear about this study?",
   ],
   (information: Information) => {
-    const inputs = document.querySelectorAll("input[placeholder='Your answer']")!;
+    const inputs = document.querySelectorAll(
+      "input[placeholder='Your answer']"
+    )!;
 
     var answers = [
       information.firstName,
@@ -24,10 +40,8 @@ PanelFox.addPage(
     for (let i = 0; i < inputs.length; i++)
       (inputs[i] as HTMLInputElement).value = answers[i];
     
-
-    const radios = document.querySelectorAll("div.option-label__tag")!;
-    (radios[0] as HTMLInputElement).click();
-    (radios[2] as HTMLInputElement).click();
+    selectAnswerAtIndex(0);
+    selectAnswerAtIndex(2);
   }
 );
 
@@ -61,13 +75,12 @@ PanelFox.addPage(
   }
 );
 
-PanelFox.addPage(
-  ["What state do you reside?"],
-  (information: Information) => {
-    var state = (information.state.substring(0, 1).toUpperCase() + information.state.substring(1).toLowerCase());
-    (document.querySelector("select") as HTMLSelectElement).value = state;
-  }
-);
+PanelFox.addPage(["What state do you reside?"], (information: Information) => {
+  var state =
+    information.state.substring(0, 1).toUpperCase() +
+    information.state.substring(1).toLowerCase();
+  (document.querySelector("select") as HTMLSelectElement).value = state;
+});
 
 PanelFox.addPage(
   ["What is your date of birth?"],
@@ -100,20 +113,119 @@ PanelFox.addPage(
 
     document.querySelectorAll("input")[3].value = information.age.toString();
 
-    document.querySelectorAll(".option-label__tag").forEach((label) => {
-      if (label.textContent!.trim() == "Hispanic")
-        (label as HTMLDivElement).click();
-    });
+    selectAnswerWithText(["hispanic"]);
+  }
+);
+
+PanelFox.addPage(
+  [
+    "What is your gender?",
+    "When was the last time you participated in a political focus group?",
+    "Are you of Hispanic, Latino, or Spanish origin or descent?",
+    "We want to be sure we’re representing everybody; how would you describe your race or ethnicity?",
+  ],
+  (information: Information) => {
+    switch (information.gender) {
+      case "m":
+        document.querySelectorAll("input")[0].click();
+        break;
+      case "f":
+        document.querySelectorAll("input")[1].click();
+        break;
+      case "n":
+        document.querySelectorAll("input")[2].click();
+        break;
+    }
+
+    selectAnswerAtIndex(5);
+    selectAnswerAtIndex(6);
+
+    selectAnswerWithText(["hispanic"]);
+  }
+);
+
+PanelFox.addPage(
+  ["Were you born in the United States?"],
+  (information: Information) => {
+    selectAnswerAtIndex(0);
+
+    // autoloads: What is your family’s background of nation of origin?
+    selectAnswerWithText(["ecuador"]);
+  }
+);
+
+PanelFox.addPage(
+  [
+    "Which range does your current age fall?",
+    "What is your exact age?",
+    "What is the last year of schooling that you have completed?",
+  ],
+  (information: Information) => {
+    const options: NodeListOf<HTMLDivElement> =
+      document.querySelectorAll(".option-label__tag");
+
+    Array.from(options)
+      .filter((option) => option.textContent!.includes("-"))
+      .forEach((option) => {
+        var [lower, higher] = option.textContent!.trim().split("-");
+        if (
+          parseInt(lower) <= information.age &&
+          information.age <= parseInt(higher)
+        )
+          option.click();
+      });
+
+    (
+      document.querySelector("input[type='number']")! as HTMLInputElement
+    ).value = information.age.toString();
+
+    selectAnswerWithText(["bachelor"]);
+  }
+);
+
+PanelFox.addPage(
+  ["Are you registered to vote?"],
+  (information: Information) => {
+    selectAnswerWithText(["yes"]);
+
+    // auto-appears: Generally speaking, do you think of yourself as a Democrat, a Republican, an Independent, or something else?
+    selectAnswerWithText(["ind", "dem"]);
+
+    // auto-appears: For whom did you vote in the 2020 general election for president, or were you not able to vote?
+    selectAnswerWithText(["biden"]);
+
+    // auto-appears: For whom did you vote in the 2024 general election for president, or were you not able to vote?
+    selectAnswerWithText(["harris"]);
+  }
+);
+
+PanelFox.addPage(
+  ["How important is politics to your personal identity?"],
+  (information: Information) => {
+    selectAnswerWithText(["very", "important"]);
+  }
+);
+
+PanelFox.addPage(
+  ["Are you, your family, or your friends affiliated or work with any political organizations or elected officials?"],
+  (information: Information) => {
+    selectAnswerWithText(["no"]);
+
+    // auto-appears: Are you, your family, or your friends affiliated or work with any media or journalism organizations?
+    selectAnswerWithText(["no"]);
+
+    // auto-appears: Which of the following statements best describes you in a group situation?
+    selectAnswerWithText(["no difficulty expressing my opinions"]);
+
+    // auto-appears: This study will be fully completed online. Do you have a working desktop or laptop, fully functional webcam, stable internet connection, a quiet place to have a conversation on your computer? Devices like Chromebooks, cellphones, and Netbooks with Android operating system will not be able to functional for this study.
+    selectAnswerAtIndex(9)
   }
 );
 
 PanelFox.addPage(
   ["In which time zone do you live?", "What region do you live in?"],
   (information: Information) => {
-    document.querySelectorAll(".option-label__tag").forEach((label) => {
-      if (label.textContent?.includes(information.tz.toUpperCase()))
-        (label as HTMLDivElement).click();
-    });
+    selectAnswerWithText([information.tz]);
 
     var wnocaOptionExists = true;
     document.querySelectorAll(".option-label__tag").forEach((label) => {
@@ -142,12 +254,7 @@ PanelFox.addPage(
         break;
     }
 
-    document.querySelectorAll(".option-label__tag").forEach((label) => {
-      const text = (label.textContent ?? "").toLowerCase();
-      var found = true;
-      regionText.forEach((region) => (found &&= text.includes(region)));
-      if (found) (label as HTMLDivElement).click();
-    });
+    selectAnswerWithText(regionText);
   }
 );
 

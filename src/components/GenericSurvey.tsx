@@ -19,7 +19,7 @@ export default function GenericSurvey({
   useEffect(() => {
     if (!DEBUG_MODE) return;
 
-    // surveyAnswer.printPages();
+    surveyAnswer.printPages();
   }, []);
 
   useEffect(() => {
@@ -96,6 +96,7 @@ export default function GenericSurvey({
           <Typography variant="h6">
             Currently handling page associated with these questions:
           </Typography>
+          <Typography variant="body1">{page.action.toString()}</Typography>
           <List>
             {page.text.map((question) => (
               <ListItem dense={true}>

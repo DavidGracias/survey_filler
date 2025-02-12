@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from "react";
 import {
   Collapse,
   Container,
@@ -7,20 +8,21 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
-import React, { useEffect, useMemo, useState } from "react";
+import { StarBorder, ExpandLess, ExpandMore } from "@mui/icons-material";
+
+import { DEBUG_MODE, defaultBody } from "../App";
 import ComponentProps from "../types/ComponentProps";
 import GenericSurvey from "./GenericSurvey";
-import PRC from "../surveyAnswers/PRC";
+
 import SurveyAnswers from "../types/SurveyAnswers";
 import PanelFox from "../surveyAnswers/PanelFox";
-import { defaultBody } from "../App";
-import { StarBorder } from "@mui/icons-material";
-import ExpandLess from "@mui/icons-material/ExpandLess";
-import ExpandMore from "@mui/icons-material/ExpandMore";
+import PRC from "../surveyAnswers/PRC";
+import RecruitAndField from "../surveyAnswers/RecruitAndField";
 
 enum SurveyProviders {
   PRC,
   FieldWork,
+  RecruitAndField,
   Hilton,
   Unknown,
 }
@@ -28,6 +30,7 @@ enum SurveyProviders {
 const surveyAnswers: Record<SurveyProviders, SurveyAnswers | undefined> = {
   [SurveyProviders.PRC]: PRC,
   [SurveyProviders.FieldWork]: PanelFox,
+  [SurveyProviders.RecruitAndField]: RecruitAndField,
   [SurveyProviders.Hilton]: undefined,
   [SurveyProviders.Unknown]: undefined,
 };
@@ -50,6 +53,10 @@ export default function SurveyPicker({
 
     if (url.includes("panelfox.io/s/FieldGoals"))
       setSurveyProvider(SurveyProviders.FieldWork);
+    else if (
+      body.includes("This form was created inside of Recruit and Field Inc.")
+    )
+      setSurveyProvider(SurveyProviders.RecruitAndField);
   }, [body, url]);
 
   useEffect(() => {
@@ -64,26 +71,6 @@ export default function SurveyPicker({
 
     fetchSurveyAnswer();
   }, [surveyProvider]);
-
-  const SurveyComponent = useMemo(() => {
-    if (surveyAnswer === undefined)
-      return (
-        <Container>
-          <h1>Unknown Survey Provider</h1>
-          <p>Survey provider not recognized.</p>
-        </Container>
-      );
-
-    return (
-      <GenericSurvey
-        url={url}
-        body={body}
-        tabId={tabId}
-        information={information}
-        surveyAnswer={surveyAnswer}
-      />
-    );
-  }, [body, information, surveyAnswer]);
 
   return (
     <>
@@ -125,7 +112,20 @@ export default function SurveyPicker({
       </Container>
       <Divider />
 
-      {SurveyComponent}
+      {surveyAnswer === undefined ? (
+        <Container>
+          <h1>Unknown Survey Provider</h1>
+          <p>Survey provider not recognized.</p>
+        </Container>
+      ) : (
+        <GenericSurvey
+          url={url}
+          body={body}
+          tabId={tabId}
+          information={information}
+          surveyAnswer={surveyAnswer}
+        />
+      )}
     </>
   );
 }

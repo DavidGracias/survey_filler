@@ -25,7 +25,7 @@ class SurveyAnswers {
 
   addPage(pageText: PageText, pageAction: PageAction): void {
     const pagePromise = new Promise<void>((resolve, reject) => {
-      if (this.pages.some(page => this.isPageMatch(page.text, pageText.join(' ')))) {
+      if (this.pages.some(page => page.text.sort().join() === pageText.sort().join())) {
         reject(new Error("Page already exists for: " + pageText));
       } else {
         this.pages.push({ text: pageText, action: pageAction });

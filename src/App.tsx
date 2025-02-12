@@ -51,7 +51,16 @@ export default function App() {
         target: { tabId: tab.id! },
         func: () => document.querySelector("body")!.outerHTML,
       })
-      .then((results) => setBody(results[0].result!));
+      .then((results) => {
+        setBody(results[0].result!);
+        if (DEBUG_MODE && body != results[0].result!)
+          alert(
+            `Body Changed!\n\nOld Body: ${body.substring(
+              0,
+              10
+            )}\n\nNew Body: ${results[0].result!.substring(0, 10)}`
+          );
+      });
     setUrl(tab.url!);
     setTabId(tab.id!);
   };
