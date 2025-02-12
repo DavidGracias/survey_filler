@@ -51,13 +51,7 @@ export default function App() {
         target: { tabId: tab.id! },
         func: () => document.querySelector("body")!.outerHTML,
       })
-      .then((results) => {
-        const updatedBody = results[0].result!;
-        if (body != updatedBody) {
-          window.alert("here updated body");
-          setBody(updatedBody);
-        }
-      });
+      .then((results) => setBody(results[0].result!));
     setUrl(tab.url!);
     setTabId(tab.id!);
   };
@@ -107,7 +101,12 @@ export default function App() {
                 .filter((value): value is People => typeof value !== "string")
                 .map((person: People) => (
                   <ListItem key={person} disablePadding>
-                    <ListItemButton onClick={() => {setUser(person); setOpenUserDropdown(false);}}>
+                    <ListItemButton
+                      onClick={() => {
+                        setUser(person);
+                        setOpenUserDropdown(false);
+                      }}
+                    >
                       <ListItemIcon>
                         {person === user && <StarIcon />}
                       </ListItemIcon>

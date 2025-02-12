@@ -23,7 +23,6 @@ export default function GenericSurvey({
   }, []);
 
   useEffect(() => {
-    window.alert("GenericSurvey -> body changed");
     const page = surveyAnswer.getPageFromBody(body);
     setPage(page);
   }, [body]);
@@ -94,12 +93,9 @@ export default function GenericSurvey({
               <Divider />
             </>
           )}
-          <Typography variant="h5">
-            Currently handling page associated with this text:
+          <Typography variant="h6">
+            Currently handling page associated with these questions:
           </Typography>
-
-          <Typography variant="body2">{page.action.toString()}</Typography>
-
           <List>
             {page.text.map((question) => (
               <ListItem dense={true}>

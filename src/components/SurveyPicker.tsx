@@ -46,9 +46,10 @@ export default function SurveyPicker({
     useState(true);
 
   useEffect(() => {
-    if (body == defaultBody)
-      if (url.includes("panelfox.io/s/FieldGoals"))
-        setSurveyProvider(SurveyProviders.FieldWork);
+    if (body == defaultBody) return;
+
+    if (url.includes("panelfox.io/s/FieldGoals"))
+      setSurveyProvider(SurveyProviders.FieldWork);
   }, [body, url]);
 
   useEffect(() => {
@@ -82,7 +83,7 @@ export default function SurveyPicker({
         surveyAnswer={surveyAnswer}
       />
     );
-  }, [surveyAnswer]);
+  }, [body, information, surveyAnswer]);
 
   return (
     <>
