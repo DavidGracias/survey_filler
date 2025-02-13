@@ -3,16 +3,23 @@ import { Information } from "./Information";
 type PageText = string[];
 export type PageAction = (information: Information) => void;
 
-export type Page = { text: PageText, action: PageAction };
+export type Page = { text: PageText; action: PageAction };
 
 class SurveyAnswers {
   private pages: Page[] = [];
   private pagePromises: Promise<void>[] = [];
 
-  nextButtonQuery: string;
+  nextButtonAction: () => void;
 
-  constructor(nextButtonQuery: string) {
-    this.nextButtonQuery = nextButtonQuery;
+  constructor(param: string | (() => void)) {
+    if (typeof param === "string") {
+      this.nextButtonAction = () => {
+        const nextButton = document.querySelector(param) as HTMLButtonElement;
+        setTimeout(() => nextButton.click(), 1e3);
+      };
+    } else {
+      this.nextButtonAction = param;
+    }
   }
 
   printPages(): void {
@@ -25,7 +32,11 @@ class SurveyAnswers {
 
   addPage(pageText: PageText, pageAction: PageAction): void {
     const pagePromise = new Promise<void>((resolve, reject) => {
-      if (this.pages.some(page => page.text.sort().join() === pageText.sort().join())) {
+      if (
+        this.pages.some(
+          (page) => page.text.sort().join() === pageText.sort().join()
+        )
+      ) {
         reject(new Error("Page already exists for: " + pageText));
       } else {
         this.pages.push({ text: pageText, action: pageAction });
@@ -36,15 +47,21 @@ class SurveyAnswers {
     this.pagePromises.push(pagePromise);
   }
 
-  getPageFromBody(body: string): Page | undefined {
+  getPageFromBody(body: string): Page {
+    const document = new DOMParser().parseFromString(body, "text/html");
+    document.body
+      .querySelectorAll("script")
+      .forEach((script) => script.remove());
+    const cleanedBody = document.body.outerHTML;
+
     for (let page of this.pages) {
-      if (this.isPageMatch(page.text, body)) return page;
+      if (this.isPageMatch(page.text, cleanedBody)) return page;
     }
 
-    const document = new DOMParser().parseFromString(body, "text/html");
-    if (document.querySelectorAll(this.nextButtonQuery).length) return {text: [this.nextButtonQuery], action: () => {}};
-    
-    return undefined;
+    return {
+      text: ["No page found; attempting to continue..."],
+      action: () => {},
+    };
   }
 
   private isPageMatch(pageText: PageText, body: string): boolean {

@@ -1,5 +1,5 @@
 import { Button, Container, Divider, Typography } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import ComponentProps from "../types/ComponentProps";
 import { DEBUG_MODE } from "../App";
 import { Page } from "../types/SurveyAnswers";
@@ -37,16 +37,10 @@ export default function GenericSurvey({
         args: [information],
       })
       .then(() => {
+        if (DEBUG_MODE) return; // don't auto-continue if in debug mode
         chrome.scripting.executeScript({
           target: { tabId: tabId },
-          func: (DEBUG_MODE: boolean, nextButtonQuery: string) => {
-            if (DEBUG_MODE) return; // don't auto-continue if in debug mode
-            const nextButton = document.querySelector(
-              nextButtonQuery
-            ) as HTMLButtonElement;
-            setTimeout(() => nextButton.click(), 1e3);
-          },
-          args: [DEBUG_MODE, surveyAnswer.nextButtonQuery],
+          func: surveyAnswer.nextButtonAction,
         });
       });
   }, [page]);
@@ -78,13 +72,7 @@ export default function GenericSurvey({
                 onClick={() =>
                   chrome.scripting.executeScript({
                     target: { tabId: tabId },
-                    func: (nextButtonQuery: string) =>
-                      (
-                        document.querySelector(
-                          nextButtonQuery
-                        ) as HTMLButtonElement
-                      ).click(),
-                    args: [surveyAnswer.nextButtonQuery],
+                    func: surveyAnswer.nextButtonAction,
                   })
                 }
               >
@@ -96,7 +84,6 @@ export default function GenericSurvey({
           <Typography variant="h6">
             Currently handling page associated with these questions:
           </Typography>
-          <Typography variant="body1">{page.action.toString()}</Typography>
           <List>
             {page.text.map((question) => (
               <ListItem dense={true}>

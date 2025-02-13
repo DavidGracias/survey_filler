@@ -53,13 +53,7 @@ export default function App() {
       })
       .then((results) => {
         setBody(results[0].result!);
-        if (DEBUG_MODE && body != results[0].result!)
-          alert(
-            `Body Changed!\n\nOld Body: ${body.substring(
-              0,
-              10
-            )}\n\nNew Body: ${results[0].result!.substring(0, 10)}`
-          );
+        if (DEBUG_MODE && body != results[0].result!) alert(`Body Changed!`);
       });
     setUrl(tab.url!);
     setTabId(tab.id!);
@@ -139,4 +133,4 @@ export default function App() {
 }
 
 // other exports
-export const DEBUG_MODE: boolean = true;
+export const DEBUG_MODE: boolean = false;

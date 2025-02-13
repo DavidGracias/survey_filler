@@ -9,6 +9,45 @@ export enum Gender {
   NonBinary = "n",
 }
 
+export enum MaritalStatus {
+  Single = "single",
+  LivingWithSO = "living with significant other",
+  Married = "married",
+  Divorced = "divorced",
+  Separated = "separated",
+  Widowed = "widowed",
+  DomesticPartner = "domestic partner",
+}
+
+
+export interface Employment {
+  status: EmploymentStatus;
+  occupation?: string;
+  industry?: string;
+  employer?: string;
+  salary?: number;
+}
+
+export enum EmploymentStatus {
+  FullTime = "full time",
+  PartTime = "part time",
+  SelfEmployed = "self employed",
+  Student = "student",
+  Homemaker = "homemaker",
+  Unemployed = "unemployed",
+  Retired = "retired",
+  Other = "other",
+}
+
+export enum EducationLevel {
+  HighSchool = "hs",
+  Associates = "a",
+  BachelorScience = "bs",
+  BachelorArts = "ba",
+  PostGraduate = "pg",
+  Other = "o",
+}
+
 export enum Timezone {
   PT = "pt",
   MT = "mt",
@@ -32,6 +71,8 @@ export class Information {
   lastName: string;
   fullName: string;
   gender: Gender;
+  maritalStatus: MaritalStatus;
+  children: number;
   age: number;
   email: string;
   phone: string;
@@ -52,6 +93,9 @@ export class Information {
   dob_month_text: string;
   dob_month_abv: string;
 
+  educationLevel: EducationLevel;
+  employment: Employment;
+
   constructor(person: People) {
     switch (person) {
       case People.Bela:
@@ -60,6 +104,9 @@ export class Information {
         this.lastName = "Quintas";
 
         this.gender = Gender.Female;
+
+        this.maritalStatus = MaritalStatus.Married;
+        this.children = 0;
 
         this.email = "izabela.quintas55@gmail.com";
         this.phone = "7082052545";
@@ -77,6 +124,12 @@ export class Information {
         this.dob_month = 11;
         this.dob_day = 17;
 
+        this.employment = {
+          status: EmploymentStatus.Homemaker,
+          salary: 145000,
+        };
+        this.educationLevel = EducationLevel.BachelorScience;
+
         break;
 
       case People.David:
@@ -86,6 +139,9 @@ export class Information {
         this.lastName = "Garcia";
 
         this.gender = Gender.Male;
+
+        this.maritalStatus = MaritalStatus.Married;
+        this.children = 0;
 
         this.email = "davidg0130@gmail.com";
         this.phone = "7038538605";
@@ -102,6 +158,15 @@ export class Information {
         this.dob_year = 2001;
         this.dob_month = 1;
         this.dob_day = 30;
+
+        this.employment = {
+          status: EmploymentStatus.FullTime,
+          occupation: "Software Engineer",
+          industry: "Technology",
+          employer: "Atlassian",
+          salary: 145000
+        };
+        this.educationLevel = EducationLevel.BachelorScience;
 
     }
 
