@@ -70,10 +70,14 @@ export default function GenericSurvey({
                 sx={{ display: "block", margin: "10px auto" }}
                 variant="contained"
                 onClick={() =>
-                  chrome.scripting.executeScript({
-                    target: { tabId: tabId },
-                    func: surveyAnswer.nextButtonAction,
-                  })
+                  setTimeout(
+                    () =>
+                      chrome.scripting.executeScript({
+                        target: { tabId: tabId },
+                        func: surveyAnswer.nextButtonAction,
+                      }),
+                    1e3
+                  )
                 }
               >
                 Manually Trigger Next

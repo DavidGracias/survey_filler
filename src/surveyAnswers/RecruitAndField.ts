@@ -67,7 +67,7 @@ RecruitAndField.addPage(
       const listbox_options: NodeListOf<HTMLElement> =
         document.querySelectorAll("[data-value='" + capitalizedState + "']")!;
       listbox_options[1].click();
-    }, 100);
+    }, 300);
   }
 );
 

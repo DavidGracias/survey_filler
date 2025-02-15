@@ -15,7 +15,7 @@ class SurveyAnswers {
     if (typeof param === "string") {
       this.nextButtonAction = () => {
         const nextButton = document.querySelector(param) as HTMLButtonElement;
-        setTimeout(() => nextButton.click(), 1e3);
+        nextButton.click()
       };
     } else {
       this.nextButtonAction = param;
