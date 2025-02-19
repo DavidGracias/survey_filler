@@ -19,6 +19,10 @@ export enum MaritalStatus {
   DomesticPartner = "domestic partner",
 }
 
+export interface Child {
+  age: number;
+  liveAtHome: boolean;
+}
 
 export interface Employment {
   status: EmploymentStatus;
@@ -72,7 +76,7 @@ export class Information {
   fullName: string;
   gender: Gender;
   maritalStatus: MaritalStatus;
-  children: number;
+  children: Child[];
   age: number;
   email: string;
   phone: string;
@@ -106,7 +110,7 @@ export class Information {
         this.gender = Gender.Female;
 
         this.maritalStatus = MaritalStatus.Married;
-        this.children = 0;
+        this.children = [];
 
         this.email = "izabela.quintas55@gmail.com";
         this.phone = "7082052545";
@@ -141,7 +145,7 @@ export class Information {
         this.gender = Gender.Male;
 
         this.maritalStatus = MaritalStatus.Married;
-        this.children = 0;
+        this.children = [];
 
         this.email = "davidg0130@gmail.com";
         this.phone = "7038538605";

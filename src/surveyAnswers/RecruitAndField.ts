@@ -63,11 +63,17 @@ RecruitAndField.addPage(
     const listbox: HTMLElement = document.querySelector("div[role='option']")!;
     listbox.click();
 
-    setTimeout(() => {
-      const listbox_options: NodeListOf<HTMLElement> =
-        document.querySelectorAll("[data-value='" + capitalizedState + "']")!;
+    // TODO: fix this listbox clicking issue
+
+    setTimeout(async () => {
+      let listbox_options: NodeListOf<HTMLElement>;
+      do {
+        listbox_options =
+          document.querySelectorAll("[data-value='" + capitalizedState + "']")!;
+        await new Promise(resolve => setTimeout(resolve, 1e2));
+      } while (listbox_options.length <= 1);
       listbox_options[1].click();
-    }, 300);
+    }, 1e2);
   }
 );
 
@@ -86,7 +92,6 @@ RecruitAndField.addPage(
     "Which of the following best describes your personal income?",
   ],
   (information: Information) => {
-
     const answers = [
       null,
       information.age.toString(),
@@ -98,14 +103,14 @@ RecruitAndField.addPage(
       information.employment.employer,
       null,
     ];
-    const inputs: NodeListOf<HTMLInputElement> = document.querySelectorAll("input[type='text']");
+    const inputs: NodeListOf<HTMLInputElement> =
+      document.querySelectorAll("input[type='text']");
     answers.forEach((answer, index) => {
       if (answer === null) return;
 
       inputs[index].value = answer ?? "N/A";
       inputs[index].dispatchEvent(new Event("input", { bubbles: true }));
     });
-
 
     const gender = (() => {
       switch (information.gender) {
@@ -117,16 +122,20 @@ RecruitAndField.addPage(
           return "Other";
       }
     })();
-    
-    const maritalStatus = (() => (information.maritalStatus.charAt(0).toUpperCase() + information.maritalStatus.substring(1).toLowerCase()))();
-    const employmentStatuses = information.employment.status.split(" ").map((status) => {
-      let employmentStatus = status.toLowerCase();
-      switch (employmentStatus) {
-        case "homemaker":
-          return "stay at home parent";
-      }
-      return employmentStatus;
-    });
+
+    const maritalStatus = (() =>
+      information.maritalStatus.charAt(0).toUpperCase() +
+      information.maritalStatus.substring(1).toLowerCase())();
+    const employmentStatuses = information.employment.status
+      .split(" ")
+      .map((status) => {
+        let employmentStatus = status.toLowerCase();
+        switch (employmentStatus) {
+          case "homemaker":
+            return "stay at home parent";
+        }
+        return employmentStatus;
+      });
 
     const educationLevel = (() => {
       switch (information.educationLevel) {
@@ -147,9 +156,24 @@ RecruitAndField.addPage(
       if (span.innerText.includes("Hispanic")) span.click();
       if (span.innerText == maritalStatus) span.click();
 
+      if (information.children.length == 0 && span.innerText == "No children in the home") span.click();
+
+      if (information.children.length > 0 && span.innerText.includes("Children ages ")) {
+        const children = span.innerText.split(" ");
+        const lower_bound = parseInt(children[2]);
+        const upper_bound = parseInt(children[4]);
+
+        let should_click = false;
+        information.children.filter((child) => child.liveAtHome).forEach((child) => {
+          if (lower_bound <= child.age && child.age <= upper_bound) should_click = true;
+        });
+        if (should_click) span.click();
+      }
+
       let employmentStatusFound = true;
       employmentStatuses.forEach((status) => {
-        if (!span.innerText.toLowerCase().includes(status)) employmentStatusFound = false;
+        if (!span.innerText.toLowerCase().includes(status))
+          employmentStatusFound = false;
       });
 
       if (employmentStatusFound) span.click();
@@ -159,10 +183,40 @@ RecruitAndField.addPage(
 
     const questions = document.querySelectorAll("[role='presentation']");
 
-    const salaryRanges = (questions[questions.length - 1] as HTMLElement).querySelector("span[dir='auto']")!;
-    
+    const salaryRanges: NodeListOf<HTMLSpanElement> = (
+      questions[questions.length - 1] as HTMLElement
+    ).querySelectorAll("span[dir='auto']")!;
 
-    
+    let upper_bounds: number[] = [];
+    salaryRanges.forEach((span) => {
+      const values = span.innerText.split("$");
+      const upper_bound = values.slice(-1)[0].replace("+", "").replace("k", ",000");
+      upper_bounds.push(parseInt(upper_bound.replace(",", "")));
+    });
+
+    upper_bounds = upper_bounds.sort((a, b) => a - b);
+    upper_bounds[upper_bounds.length - 1] = Number.MAX_VALUE;
+
+    const salary = information.employment.salary!;
+    const rangeIndex = upper_bounds.findIndex(bound => salary <= bound);
+    salaryRanges[rangeIndex].click();
+  }
+);
+
+RecruitAndField.addPage(
+  [
+    "Which country were you born in?",
+    "How long have you lived in the USA?",
+  ],
+  (information: Information) => {
+    const answers = [
+      "United States",
+      information.age.toString(),
+    ];
+    document.querySelectorAll("input[type='text']").forEach((input, i) => {
+      (input as HTMLInputElement).value = answers[i];
+      (input as HTMLInputElement).dispatchEvent(new Event("input", { bubbles: true }));
+    });
   }
 );
 

@@ -2,7 +2,7 @@ import { Button, Container, Divider, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import ComponentProps from "../types/ComponentProps";
 import { DEBUG_MODE } from "../App";
-import { Page } from "../types/SurveyAnswers";
+import SurveyAnswers, { Page } from "../types/SurveyAnswers";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
@@ -36,12 +36,12 @@ export default function GenericSurvey({
         func: page.action,
         args: [information],
       })
-      .then(() => {
+      .then((results) => {
+        // TODO: pause-resume auto-continue button
+        // results[0].result;
+        
         if (DEBUG_MODE) return; // don't auto-continue if in debug mode
-        chrome.scripting.executeScript({
-          target: { tabId: tabId },
-          func: surveyAnswer.nextButtonAction,
-        });
+        triggerNextButton(tabId, surveyAnswer)
       });
   }, [page]);
 
@@ -69,16 +69,7 @@ export default function GenericSurvey({
               <Button
                 sx={{ display: "block", margin: "10px auto" }}
                 variant="contained"
-                onClick={() =>
-                  setTimeout(
-                    () =>
-                      chrome.scripting.executeScript({
-                        target: { tabId: tabId },
-                        func: surveyAnswer.nextButtonAction,
-                      }),
-                    1e3
-                  )
-                }
+                onClick={() => triggerNextButton(tabId, surveyAnswer)}
               >
                 Manually Trigger Next
               </Button>
@@ -99,4 +90,13 @@ export default function GenericSurvey({
       )}
     </Container>
   );
+}
+
+function triggerNextButton(tabId: number, surveyAnswer: SurveyAnswers) {
+  setTimeout(
+    () =>
+      chrome.scripting.executeScript({
+        target: { tabId: tabId },
+        func: surveyAnswer.nextButtonAction,
+      }), 250)
 }
