@@ -1,78 +1,123 @@
 import { Information } from "./Information";
 
-type PageText = string[];
-export type PageAction = (information: Information) => void;
+type MatchText = string[];
+type MatchAction = (information: Information, i: number) => void;
+type Match = { text: MatchText; action: MatchAction };
+export type MatchedQuestion = Match & { i: number };
 
-export type Page = { text: PageText; action: PageAction };
+type SurveyAnswersContext = {
+  nextButtonAction: (selector: string | null) => void;
+  additionalContext: ((...args: any[]) => unknown)[];
+  nextButtonSelector: string | null;
+  questionSelectAction: (
+    document: Document,
+    selector: string | null
+  ) => HTMLElement[];
+};
+type SurveyAnswersConstructor = {
+  nextButtonAction: string | SurveyAnswersContext["nextButtonAction"];
+  questionSelector: string;
+  additionalContext: SurveyAnswersContext["additionalContext"];
+};
 
-class SurveyAnswers {
-  private pages: Page[] = [];
-  private pagePromises: Promise<void>[] = [];
+class SurveyAnswers implements SurveyAnswersContext {
+  private questions: Match[] = [];
+  private questionPromises: Promise<void>[] = [];
 
-  nextButtonAction: () => void;
+  nextButtonSelector;
+  nextButtonAction;
+  questionSelector;
+  questionSelectAction;
+  additionalContext;
 
-  constructor(param: string | (() => void)) {
-    if (typeof param === "string") {
-      this.nextButtonAction = () => {
-        const nextButton = document.querySelector(param) as HTMLButtonElement;
-        nextButton.click()
-      };
+  constructor(c: SurveyAnswersConstructor) {
+
+    if (typeof c.nextButtonAction === "function") {
+      this.nextButtonSelector = null;
+      this.nextButtonAction = c.nextButtonAction;
     } else {
-      this.nextButtonAction = param;
+      this.nextButtonSelector = c.nextButtonAction;
+      this.nextButtonAction = (selector: string | null) => {
+        (document.querySelector(selector!) as HTMLElement).click();
+      };
     }
+
+    this.questionSelector = c.questionSelector;
+    this.questionSelectAction = (
+      document: Document,
+      selector: string | null
+    ) => {
+      return Array.from(
+        document.querySelectorAll(selector!)
+      ) as HTMLElement[];
+    };
+    
+    this.additionalContext = c.additionalContext;
   }
 
-  printPages(): void {
-    let alertMessage = "";
-    for (let page of this.pages) {
-      alertMessage += page.text.join("\n") + "\n\n---\n";
-    }
-    window.alert("Survey Pages:" + alertMessage);
-  }
-
-  addPage(pageText: PageText, pageAction: PageAction): void {
-    const pagePromise = new Promise<void>((resolve, reject) => {
+  addQuestion(questionText: MatchText, questionAction: MatchAction): void {
+    const questionPromise = new Promise<void>((resolve, reject) => {
       if (
-        this.pages.some(
-          (page) => page.text.sort().join() === pageText.sort().join()
+        this.questions.some(
+          (question) =>
+            question.text.sort().join() === questionText.sort().join()
         )
       ) {
-        reject(new Error("Page already exists for: " + pageText));
+        reject(new Error("Question already exists for: " + questionText));
       } else {
-        this.pages.push({ text: pageText, action: pageAction });
+        this.questions.push({ text: questionText, action: questionAction });
         resolve();
       }
     });
 
-    this.pagePromises.push(pagePromise);
+    this.questionPromises.push(questionPromise);
   }
 
-  getPageFromBody(body: string): Page {
-    const document = new DOMParser().parseFromString(body, "text/html");
-    document.body
-      .querySelectorAll("script")
-      .forEach((script) => script.remove());
-    const cleanedBody = document.body.outerHTML;
+  private getQuestions(document: Document): HTMLElement[] {
+    return this.questionSelectAction(document, this.questionSelector);
+  }
 
-    for (let page of this.pages) {
-      if (this.isPageMatch(page.text, cleanedBody)) return page;
+  getQuestionsFromDocument(document: Document): MatchedQuestion[] {
+    return this.getQuestions(document)
+      .map((question, i) => this.matchedQuestion(question, i))
+      .filter((question): question is MatchedQuestion => question !== null);
+  }
+
+  private matchedQuestion(
+    questionFound: HTMLElement,
+    i: number
+  ): MatchedQuestion | null {
+    for (let question of this.questions) {
+      var found = true;
+      for (let text of question.text) {
+        found &&= questionFound.outerHTML.includes(text);
+      }
+      if (found) return { ...question, i: i };
     }
+    return null;
+  }
 
+  printQuestions(): void {
+    let alertMessage = "";
+    for (let question of this.questions) {
+      alertMessage += question.text.join("\n") + "\n\n---\n";
+    }
+    window.alert("Survey Questions:" + alertMessage);
+  }
+
+  async waitForAllQuestions(): Promise<void> {
+    await Promise.all(this.questionPromises);
+  }
+
+  getContext(): {
+    [K in keyof SurveyAnswersContext]: string;
+  } {
     return {
-      text: ["No page found; attempting to continue..."],
-      action: () => {},
+      nextButtonAction: this.nextButtonAction.toString(),
+      nextButtonSelector: this.nextButtonSelector ? this.nextButtonSelector : "",
+      questionSelectAction: this.questionSelectAction.toString(),
+      additionalContext: this.additionalContext.toString(),
     };
-  }
-
-  private isPageMatch(pageText: PageText, body: string): boolean {
-    for (let text of pageText) {
-      if (!body.includes(text)) return false;
-    }
-    return true;
-  }
-
-  async waitForAllPages(): Promise<void> {
-    await Promise.all(this.pagePromises);
   }
 }
 

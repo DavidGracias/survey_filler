@@ -1,8 +1,8 @@
 import { Button, Container, Divider, Typography } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import ComponentProps from "../types/ComponentProps";
 import { DEBUG_MODE } from "../App";
-import SurveyAnswers, { Page } from "../types/SurveyAnswers";
+import SurveyAnswers, { MatchedQuestion } from "../types/SurveyAnswers";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
@@ -14,43 +14,49 @@ export default function GenericSurvey({
   information,
   surveyAnswer,
 }: ComponentProps) {
-  const [page, setPage] = useState<Page>();
+  const [matchedQuestions, setMatchedQuestions] = useState<MatchedQuestion[]>([]);
+  const document = useMemo(
+    () => new DOMParser().parseFromString(body, "text/html"),
+    [body]
+  );
 
   useEffect(() => {
     if (!DEBUG_MODE) return;
 
-    surveyAnswer.printPages();
+    surveyAnswer.printQuestions();
   }, []);
 
   useEffect(() => {
-    const page = surveyAnswer.getPageFromBody(body);
-    setPage(page);
-  }, [body]);
+    setMatchedQuestions(surveyAnswer.getQuestionsFromDocument(document));
+  }, [document]);
 
   useEffect(() => {
-    if (page === undefined) return;
+    if (!matchedQuestions.length) return;
 
-    chrome.scripting
-      .executeScript({
-        target: { tabId: tabId },
-        func: page.action,
-        args: [information],
-      })
-      .then((results) => {
-        // TODO: pause-resume auto-continue button
-        // results[0].result;
-        
-        if (DEBUG_MODE) return; // don't auto-continue if in debug mode
-        triggerNextButton(tabId, surveyAnswer)
-      });
-  }, [page]);
+    // Create async function to handle sequential execution
+    const answerQuestionsSequentially = async () => {
+      for (const question of matchedQuestions) {
+        await chrome.scripting.executeScript({
+          target: { tabId: tabId },
+          func: question.action,
+          args: [information, question.i],
+        });
+      }
+    };
+
+    answerQuestionsSequentially().then(() => {
+      if (DEBUG_MODE) return; // don't auto-continue if in debug mode
+      triggerNextButton(tabId, surveyAnswer);
+    });
+  }, [matchedQuestions]);
 
   return (
     <Container>
-      {page === undefined ? (
+      {!matchedQuestions.length ? (
         <>
           <Typography variant="h5">
-            Unable to load / find page related to the survey. Please try again.
+            Unable to load / find questions related to the survey. Please try
+            again.
           </Typography>
 
           <Typography>
@@ -80,9 +86,9 @@ export default function GenericSurvey({
             Currently handling page associated with these questions:
           </Typography>
           <List>
-            {page.text.map((question) => (
+            {matchedQuestions.map((question) => (
               <ListItem dense={true}>
-                <ListItemText primary={question} />
+                <ListItemText primary={question.text} />
               </ListItem>
             ))}
           </List>
@@ -98,5 +104,8 @@ function triggerNextButton(tabId: number, surveyAnswer: SurveyAnswers) {
       chrome.scripting.executeScript({
         target: { tabId: tabId },
         func: surveyAnswer.nextButtonAction,
-      }), 250)
+        args: [surveyAnswer.nextButtonSelector],
+      }),
+    250
+  );
 }

@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { StarBorder, ExpandLess, ExpandMore } from "@mui/icons-material";
 
-import { DEBUG_MODE, defaultBody } from "../App";
+import { defaultBody } from "../App";
 import ComponentProps from "../types/ComponentProps";
 import GenericSurvey from "./GenericSurvey";
 
@@ -18,13 +18,14 @@ import SurveyAnswers from "../types/SurveyAnswers";
 import PanelFox from "../surveyAnswers/PanelFox";
 import PRC from "../surveyAnswers/PRC";
 import RecruitAndField from "../surveyAnswers/RecruitAndField";
+import AdlerWeiner from "../surveyAnswers/AdlerWeiner";
 
 enum SurveyProviders {
   PRC,
   FieldWork,
   RecruitAndField,
   AdlerWeiner,
-  Hilton,
+  // Hilton,
   Unknown,
 }
 
@@ -32,8 +33,8 @@ const surveyAnswers: Record<SurveyProviders, SurveyAnswers | undefined> = {
   [SurveyProviders.PRC]: PRC,
   [SurveyProviders.FieldWork]: PanelFox,
   [SurveyProviders.RecruitAndField]: RecruitAndField,
-  [SurveyProviders.AdlerWeiner]: undefined,
-  [SurveyProviders.Hilton]: undefined,
+  [SurveyProviders.AdlerWeiner]: AdlerWeiner,
+  // [SurveyProviders.Hilton]: undefined,
   [SurveyProviders.Unknown]: undefined,
 };
 
@@ -80,8 +81,12 @@ export default function SurveyPicker({
     const fetchSurveyAnswer = async () => {
       const surveyAnswer = surveyAnswers[surveyProvider];
       if (surveyAnswer !== undefined) {
-        await surveyAnswer.waitForAllPages();
+        await surveyAnswer.waitForAllQuestions();
         setOpenSurveyProviderDropdown(false);
+        chrome.runtime.sendMessage({
+          type: 'INJECT_SURVEYANSWER_CONTEXT',
+          context: surveyAnswer.getContext(),
+        });
       }
       setSurveyAnswer(surveyAnswer);
     };
