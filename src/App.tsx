@@ -83,7 +83,7 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [count]);
 
-  // app specific code
+  // App Specific Code
   const [user, setUser] = useState<People>(People.David);
   const [openUserDropdown, setOpenUserDropdown] = useState(false);
 

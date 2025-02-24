@@ -2,52 +2,81 @@ import SurveyAnswers from "../types/SurveyAnswers";
 import { Information } from "../types/Information";
 
 const PanelFox = new SurveyAnswers({
-  nextButtonAction: "button",
-  questionSelector: "",
-  additionalContext: []
+  nextButtonAction: "button.big",
+  questionSelector: ".SortableItem",
+  additionalContext: [selectOptionWithText]
 });
 
-// function selectAnswerWithText(needles: string[]) {
-//   needles = needles.map((n) => n.trim().toLowerCase());
-//   document.querySelectorAll(".option-label__tag").forEach((option_label) => {
-//     const haystack = option_label.textContent!.trim().toLowerCase();
-//     var found = true;
-//     needles.forEach((needle) => (found &&= haystack.includes(needle)));
-//     if (found) (option_label as HTMLDivElement).click();
-//   });
-// }
+function selectOptionWithText(questionElement: HTMLElement, needles: string[]) {
+  needles = needles.map((n) => n.trim().toLowerCase());
+  questionElement.querySelectorAll(".option-label__tag").forEach((option_label) => {
+    const haystack = option_label.textContent!.trim().toLowerCase();
+    var found = true;
+    needles.forEach((needle) => (found &&= haystack.includes(needle)));
+    if (found) (option_label as HTMLDivElement).click();
+  });
+}
 
 // function selectAnswerAtIndex(index: number) {
 //   (document.querySelectorAll(".option-label__tag")[index] as HTMLDivElement).click();
 // }
 
-// PanelFox.addPage(
-//   [
-//     "First Name",
-//     "Last Name",
-//     "Email",
-//     "Phone Number",
-//     "Do you certify that the information you provide on this survey is true and accurate? By consenting you confirm that you understand that false representation will result in dismissal without pay if selected for the study.",
-//     "How did you hear about this study?",
-//   ],
-//   (information: Information) => {
-//     const inputs = document.querySelectorAll(
-//       "input[placeholder='Your answer']"
-//     )!;
+PanelFox.addQuestion(
+  [
+    "First Name",
+  ],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    (element.querySelector("input") as HTMLInputElement).value = information.firstName;
+  }
+);
+PanelFox.addQuestion(
+  [
+    "Last Name",
+  ],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    (element.querySelector("input") as HTMLInputElement).value = information.lastName;
+  }
+);
+PanelFox.addQuestion(
+  [
+    "Email",
+  ],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    (element.querySelector("input") as HTMLInputElement).value = information.email;
+  }
+);
+PanelFox.addQuestion(
+  [
+    "Phone Number",
+  ],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    (element.querySelector("input") as HTMLInputElement).value = information.phone;
+  }
+);
+PanelFox.addQuestion(
+  [
+    "Do you certify that the information you provide on this survey is true and accurate",
+  ],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    selectOptionWithText(element, ["yes"]);
+  }
+);
 
-//     var answers = [
-//       information.firstName,
-//       information.lastName,
-//       information.email,
-//       information.phone,
-//     ];
-//     for (let i = 0; i < inputs.length; i++)
-//       (inputs[i] as HTMLInputElement).value = answers[i];
-    
-//     selectAnswerAtIndex(0);
-//     selectAnswerAtIndex(2);
-//   }
-// );
+PanelFox.addQuestion(
+  [
+    "How did you hear about this study?",
+  ],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    selectOptionWithText(element, ["email"]);
+  }
+);
+
 
 // PanelFox.addPage(
 //   [

@@ -83,10 +83,7 @@ export default function SurveyPicker({
       if (surveyAnswer !== undefined) {
         await surveyAnswer.waitForAllQuestions();
         setOpenSurveyProviderDropdown(false);
-        chrome.runtime.sendMessage({
-          type: 'INJECT_SURVEYANSWER_CONTEXT',
-          context: surveyAnswer.getContext(),
-        });
+        await triggerContextInjection(surveyAnswer, tabId);
       }
       setSurveyAnswer(surveyAnswer);
     };
@@ -189,4 +186,29 @@ async function compareImages(
 
   const similarityThreshold = 0.7;
   if (similarPixels / totalPixels >= similarityThreshold) onMatch();
+}
+
+async function triggerContextInjection(surveyAnswer: SurveyAnswers, tabId: number) {
+  const { additionalContext, ...mainContext } = surveyAnswer.getContext();
+  
+  const injectContext = {
+    ...mainContext,
+    ...Object.fromEntries(
+      additionalContext.map((item) => [item.name, item])
+    ),
+  };
+
+  const injectCode = Object.entries(injectContext)
+      .map(([key, value]) => 
+        `globalThis.${key} = ${typeof value === 'string' ? JSON.stringify(value) : value};`
+      ).join("\n");
+
+  await chrome.scripting.executeScript({
+    target: { tabId: tabId },
+    world: "MAIN",
+    func: (code) => {
+      new Function(code)();
+    },
+    args: [injectCode]
+  });
 }

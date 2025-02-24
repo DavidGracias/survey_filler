@@ -47,6 +47,7 @@ export default function GenericSurvey({
       for (const question of matchedQuestions) {
         await chrome.scripting.executeScript({
           target: { tabId: tabId },
+          world: "MAIN",
           func: question.action,
           args: [information, surveyAnswer.questionSelector, question.i],
         });

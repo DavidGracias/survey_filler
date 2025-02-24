@@ -106,16 +106,12 @@ class SurveyAnswers implements SurveyAnswersContext {
     await Promise.all(this.questionPromises);
   }
 
-  getContext(): {
-    [K in keyof SurveyAnswersContext]: string;
-  } {
+  getContext(): SurveyAnswersContext {
     return {
-      nextButtonAction: this.nextButtonAction.toString(),
-      nextButtonSelector: this.nextButtonSelector
-        ? this.nextButtonSelector
-        : "",
-      questionSelectAction: this.questionSelectAction.toString(),
-      additionalContext: this.additionalContext.toString(),
+      nextButtonAction: this.nextButtonAction,
+      nextButtonSelector: this.nextButtonSelector,
+      questionSelectAction: this.questionSelectAction,
+      additionalContext: this.additionalContext,
     };
   }
 }
