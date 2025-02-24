@@ -18,22 +18,24 @@ AdlerWeiner.addQuestion(
     "Email Address",
     "Phone Number",
   ],
-  (information: Information, selector: string) => {
-    // const inputs = element.querySelectorAll("input");
-    // const answers = [
-    //   information.fullName,
-    //   information.streetAddress,
-    //   information.city,
-    //   information.state,
-    //   information.zipcode,
-    //   information.email,
-    //   information.phone,
-    // ];
-    // for (let i = 0; i < inputs.length; i++) {
-    //   (inputs[i] as HTMLInputElement).value = answers[i];
-    // }
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    const inputs = element.querySelectorAll("input");
+    const answers = [
+      information.fullName,
+      information.streetAddress,
+      information.city,
+      information.state,
+      information.zipcode,
+      information.email,
+      information.phone,
+    ];
+    for (let i = 0; i < inputs.length; i++) {
+      (inputs[i] as HTMLInputElement).value = answers[i];
+    }
   });
-// )
+
+  
 // AdlerWeiner.addPage(
 //   [
 //     "Right to Opt-Out Info",

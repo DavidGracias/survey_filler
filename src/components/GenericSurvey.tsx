@@ -14,7 +14,9 @@ export default function GenericSurvey({
   information,
   surveyAnswer,
 }: ComponentProps) {
-  const [matchedQuestions, setMatchedQuestions] = useState<MatchedQuestion[]>([]);
+  const [matchedQuestions, setMatchedQuestions] = useState<MatchedQuestion[]>(
+    []
+  );
   const document = useMemo(
     () => new DOMParser().parseFromString(body, "text/html"),
     [body]
@@ -22,7 +24,6 @@ export default function GenericSurvey({
 
   useEffect(() => {
     if (!DEBUG_MODE) return;
-
     surveyAnswer.printQuestions();
   }, []);
 
@@ -32,6 +33,14 @@ export default function GenericSurvey({
 
   useEffect(() => {
     if (!matchedQuestions.length) return;
+    if (DEBUG_MODE) {
+      window.alert(
+        "matchedQuestions (# of items = " +
+          matchedQuestions.length +
+          "): \n" +
+          JSON.stringify(matchedQuestions)
+      );
+    }
 
     // Create async function to handle sequential execution
     const answerQuestionsSequentially = async () => {
@@ -39,13 +48,16 @@ export default function GenericSurvey({
         await chrome.scripting.executeScript({
           target: { tabId: tabId },
           func: question.action,
-          args: [information, question.i],
+          args: [information, surveyAnswer.questionSelector, question.i],
         });
       }
     };
 
     answerQuestionsSequentially().then(() => {
-      if (DEBUG_MODE) return; // don't auto-continue if in debug mode
+      if (DEBUG_MODE) {
+        window.alert("DEBUG_MODE is enabled, skipping pressNextButton()");
+        return; // don't auto-continue if in debug mode
+      }
       triggerNextButton(tabId, surveyAnswer);
     });
   }, [matchedQuestions]);

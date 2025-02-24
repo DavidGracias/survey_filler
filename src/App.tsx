@@ -133,4 +133,4 @@ export default function App() {
 }
 
 // other exports
-export const DEBUG_MODE: boolean = true;
+export const DEBUG_MODE: boolean = false;

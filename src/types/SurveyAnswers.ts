@@ -1,7 +1,7 @@
 import { Information } from "./Information";
 
 type MatchText = string[];
-type MatchAction = (information: Information, i: number) => void;
+type MatchAction = (information: Information, selector: string, i: number) => void;
 type Match = { text: MatchText; action: MatchAction };
 export type MatchedQuestion = Match & { i: number };
 
@@ -31,7 +31,6 @@ class SurveyAnswers implements SurveyAnswersContext {
   additionalContext;
 
   constructor(c: SurveyAnswersConstructor) {
-
     if (typeof c.nextButtonAction === "function") {
       this.nextButtonSelector = null;
       this.nextButtonAction = c.nextButtonAction;
@@ -47,11 +46,9 @@ class SurveyAnswers implements SurveyAnswersContext {
       document: Document,
       selector: string | null
     ) => {
-      return Array.from(
-        document.querySelectorAll(selector!)
-      ) as HTMLElement[];
+      return Array.from(document.querySelectorAll(selector!)) as HTMLElement[];
     };
-    
+
     this.additionalContext = c.additionalContext;
   }
 
@@ -102,7 +99,7 @@ class SurveyAnswers implements SurveyAnswersContext {
     for (let question of this.questions) {
       alertMessage += question.text.join("\n") + "\n\n---\n";
     }
-    window.alert("Survey Questions:" + alertMessage);
+    window.alert("Survey Questions:\n" + alertMessage);
   }
 
   async waitForAllQuestions(): Promise<void> {
@@ -114,7 +111,9 @@ class SurveyAnswers implements SurveyAnswersContext {
   } {
     return {
       nextButtonAction: this.nextButtonAction.toString(),
-      nextButtonSelector: this.nextButtonSelector ? this.nextButtonSelector : "",
+      nextButtonSelector: this.nextButtonSelector
+        ? this.nextButtonSelector
+        : "",
       questionSelectAction: this.questionSelectAction.toString(),
       additionalContext: this.additionalContext.toString(),
     };
