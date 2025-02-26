@@ -1,60 +1,61 @@
 import SurveyAnswers from "../types/SurveyAnswers";
 import { Information } from "../types/Information";
+import { WeightedOption, chooseWeightedOption } from "./util/WeightedOptions";
 
 const PanelFox = new SurveyAnswers({
   nextButtonAction: "button.big",
   questionSelector: ".SortableItem",
-  additionalContext: [selectOptionWithText]
+  additionalContext: [selectOptionWithText, ageAtDate, WeightedOption, chooseWeightedOption],
 });
 
 function selectOptionWithText(questionElement: HTMLElement, needles: string[]) {
   needles = needles.map((n) => n.trim().toLowerCase());
-  questionElement.querySelectorAll(".option-label__tag").forEach((option_label) => {
-    const haystack = option_label.textContent!.trim().toLowerCase();
-    var found = true;
-    needles.forEach((needle) => (found &&= haystack.includes(needle)));
-    if (found) (option_label as HTMLDivElement).click();
-  });
+  questionElement
+    .querySelectorAll(".option-label__tag")
+    .forEach((option_label) => {
+      const haystack = option_label.textContent!.trim().toLowerCase();
+      var found = true;
+      needles.forEach((needle) => (found &&= haystack.includes(needle)));
+      if (found) (option_label as HTMLDivElement).click();
+    });
 }
 
-// function selectAnswerAtIndex(index: number) {
-//   (document.querySelectorAll(".option-label__tag")[index] as HTMLDivElement).click();
-// }
+function ageAtDate(dob: string, date: string): number {
+  const dobMillis = Date.parse(dob);
+  const dateMillis = Date.parse(date);
+  return new Date(dateMillis - dobMillis).getUTCFullYear() - 1970;
+}
 
 PanelFox.addQuestion(
-  [
-    "First Name",
-  ],
+  ["First Name"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
-    (element.querySelector("input") as HTMLInputElement).value = information.firstName;
+    (element.querySelector("input") as HTMLInputElement).value =
+      information.firstName;
   }
 );
 PanelFox.addQuestion(
-  [
-    "Last Name",
-  ],
+  ["Last Name"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
-    (element.querySelector("input") as HTMLInputElement).value = information.lastName;
+    (element.querySelector("input") as HTMLInputElement).value =
+      information.lastName;
   }
 );
 PanelFox.addQuestion(
-  [
-    "Email",
-  ],
+  ["Email"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
-    (element.querySelector("input") as HTMLInputElement).value = information.email;
+    (element.querySelector("input") as HTMLInputElement).value =
+      information.email;
   }
 );
 PanelFox.addQuestion(
-  [
-    "Phone Number",
-  ],
+  ["Phone Number"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
-    (element.querySelector("input") as HTMLInputElement).value = information.phone;
+    (element.querySelector("input") as HTMLInputElement).value =
+      information.phone;
   }
 );
 PanelFox.addQuestion(
@@ -68,227 +69,193 @@ PanelFox.addQuestion(
 );
 
 PanelFox.addQuestion(
-  [
-    "How did you hear about this study?",
-  ],
+  ["How did you hear about this study?"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
     selectOptionWithText(element, ["email"]);
   }
 );
 
+PanelFox.addQuestion(
+  ["What state do you reside?"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    var state =
+      information.state.substring(0, 1).toUpperCase() +
+      information.state.substring(1).toLowerCase();
+    (element.querySelector("select") as HTMLSelectElement).value = state;
+  }
+);
 
-// PanelFox.addPage(
-//   [
-//     "First Name",
-//     "Last Name",
-//     "Email",
-//     "Cell Phone Number",
-//     "Alternate Phone Number",
-//     "In what state do you reside?",
-//     "What is your 5-digit zip code?",
-//   ],
-//   (information: Information) => {
-//     const inputs = document.querySelectorAll(
-//       "input[placeholder='Your answer']"
-//     )!;
-//     var answers = [
-//       information.firstName,
-//       information.lastName,
-//       information.email,
-//       information.phone,
-//       "",
-//       information.zipcode,
-//     ];
-//     for (let i = 0; i < inputs.length; i++)
-//       (inputs[i] as HTMLInputElement).value = answers[i];
+PanelFox.addQuestion(
+  ["What is your gender?"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    switch (information.gender) {
+      case "m":
+        element.querySelectorAll("input")[0].click();
+        break;
+      case "f":
+        element.querySelectorAll("input")[1].click();
+        break;
+      case "n":
+        element.querySelectorAll("input")[2].click();
+        break;
+    }
+  }
+);
 
-//     (document.querySelector("select") as HTMLSelectElement).value =
-//       information.stateAbbreviation.toUpperCase();
-//   }
-// );
+PanelFox.addQuestion(
+  ["When was the last time you participated in", "focus group"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    const weightedOptions = [];
+    weightedOptions.push(WeightedOption(["never"], 1));
+    weightedOptions.push(WeightedOption(["more"], 9));
+    weightedOptions.push(WeightedOption(["less"], 0));
 
-// PanelFox.addPage(["What state do you reside?"], (information: Information) => {
-//   var state =
-//     information.state.substring(0, 1).toUpperCase() +
-//     information.state.substring(1).toLowerCase();
-//   (document.querySelector("select") as HTMLSelectElement).value = state;
-// });
+    const option = chooseWeightedOption(weightedOptions);
+    option && selectOptionWithText(element, option);
+  }
+);
 
-// PanelFox.addPage(
-//   ["What is your date of birth?"],
-//   (information: Information) => {
-//     const input: HTMLInputElement = document.querySelector("input")!;
+PanelFox.addQuestion(
+  ["Are you of Hispanic, Latino, or Spanish origin or descent?"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    selectOptionWithText(element, ["yes"]);
+  }
+);
 
-//     input.value = information.dob_mmddyyyy_slash;
-//     input.dispatchEvent(new Event("input", { bubbles: true }));
-//   }
-// );
+PanelFox.addQuestion(
+  ["your", "race", "ethnicity"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    selectOptionWithText(element, ["hispanic"]);
+  }
+);
 
-// PanelFox.addPage(
-//   [
-//     "What is your gender?",
-//     "What is your age?",
-//     "Which of the following best describes your racial or ethnic identity?",
-//   ],
-//   (information: Information) => {
-//     switch (information.gender) {
-//       case "m":
-//         document.querySelectorAll("input")[0].click();
-//         break;
-//       case "f":
-//         document.querySelectorAll("input")[1].click();
-//         break;
-//       case "n":
-//         document.querySelectorAll("input")[2].click();
-//         break;
-//     }
+PanelFox.addQuestion(
+  ["Were you born in the United States?"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    selectOptionWithText(element, ["yes"]);
+  }
+);
 
-//     document.querySelectorAll("input")[3].value = information.age.toString();
+PanelFox.addQuestion(
+  ["What is your family's background of nation of origin?"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    selectOptionWithText(element, [information.nationOfOrigin.slice(0, -1)]);
+  }
+);
 
-//     selectAnswerWithText(["hispanic"]);
-//   }
-// );
+PanelFox.addQuestion(
+  ["age", "range"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    const options: NodeListOf<HTMLElement> =
+      element.querySelectorAll(".option-label__tag");
 
-// PanelFox.addPage(
-//   [
-//     "What is your gender?",
-//     "When was the last time you participated in a political focus group?",
-//     "Are you of Hispanic, Latino, or Spanish origin or descent?",
-//     "We want to be sure we’re representing everybody; how would you describe your race or ethnicity?",
-//   ],
-//   (information: Information) => {
-//     switch (information.gender) {
-//       case "m":
-//         document.querySelectorAll("input")[0].click();
-//         break;
-//       case "f":
-//         document.querySelectorAll("input")[1].click();
-//         break;
-//       case "n":
-//         document.querySelectorAll("input")[2].click();
-//         break;
-//     }
+    let under: number | undefined, over: number;
 
-//     selectAnswerAtIndex(5);
-//     selectAnswerAtIndex(6);
+    Array.from(options)
+      .filter((option) => option.textContent!.includes("-"))
+      .forEach((option) => {
+        var [lower, higher] = option.textContent!.trim().split("-");
+        if (
+          parseInt(lower) <= information.age &&
+          information.age <= parseInt(higher)
+        )
+          option.click();
 
-//     selectAnswerWithText(["hispanic"]);
-//   }
-// );
+        if (under == undefined) under = parseInt(lower);
+        over = parseInt(higher);
+      });
+    if (information.age < under!) {
+      options[0].click();
+    } else if (information.age > over!) {
+      options[options.length - 1].click();
+    }
+  }
+);
 
-// PanelFox.addPage(
-//   ["Were you born in the United States?"],
-//   (information: Information) => {
-//     selectAnswerAtIndex(0);
+PanelFox.addQuestion(
+  ["What is the last year of schooling that you have completed?"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    let selectText: string[] = [];
+    switch (information.educationLevel) {
+      case "hs":
+        selectText = ["high", "school", "diploma"];
+        break;
+      case "a":
+        selectText = ["associate", "degree"];
+        break;
+      case "bs":
+      case "ba":
+        selectText = ["bachelor", "degree"];
+        break;
+      case "m":
+        selectText = ["master", "degree"];
+        break;
+      case "pg":
+        selectText = ["doctor", "degree"];
+        break;
+    }
 
-//     // autoloads: What is your family’s background of nation of origin?
-//     selectAnswerWithText(["ecuador"]);
-//   }
-// );
+    selectText && selectOptionWithText(element, selectText);
+  }
+);
 
-// PanelFox.addPage(
-//   [
-//     "Which range does your current age fall?",
-//     "What is your exact age?",
-//     "What is the last year of schooling that you have completed?",
-//   ],
-//   (information: Information) => {
-//     const options: NodeListOf<HTMLDivElement> =
-//       document.querySelectorAll(".option-label__tag");
+PanelFox.addQuestion(
+  ["Are you registered to vote?"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    selectOptionWithText(element, [information.age >= 18 ? "yes" : "no"]);
+  }
+);
 
-//     Array.from(options)
-//       .filter((option) => option.textContent!.includes("-"))
-//       .forEach((option) => {
-//         var [lower, higher] = option.textContent!.trim().split("-");
-//         if (
-//           parseInt(lower) <= information.age &&
-//           information.age <= parseInt(higher)
-//         )
-//           option.click();
-//       });
+PanelFox.addQuestion(
+  ["Democrat", "Republican", "Independent", "else"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    selectOptionWithText(element, ["independent", "dem"]);
+  }
+);
 
-//     (
-//       document.querySelector("input[type='number']")! as HTMLInputElement
-//     ).value = information.age.toString();
+PanelFox.addQuestion(
+  ["vote", "2020", "president", "election"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    if (ageAtDate(information.dob_mmddyyyy_slash, "2020-11-03") < 18)
+      selectOptionWithText(element, ["not", "eligible"]);
+    else selectOptionWithText(element, ["biden"]);
+  }
+);
 
-//     selectAnswerWithText(["bachelor"]);
-//   }
-// );
+PanelFox.addQuestion(
+  ["vote", "2024", "president", "election"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    if (ageAtDate(information.dob_mmddyyyy_slash, "2024-11-05") < 18)
+      selectOptionWithText(element, ["not", "eligible"]);
+    else selectOptionWithText(element, ["harris"]);
+  }
+);
 
-// PanelFox.addPage(
-//   ["Are you registered to vote?"],
-//   (information: Information) => {
-//     selectAnswerWithText(["yes"]);
-
-//     // auto-appears: Generally speaking, do you think of yourself as a Democrat, a Republican, an Independent, or something else?
-//     selectAnswerWithText(["ind", "dem"]);
-
-//     // auto-appears: For whom did you vote in the 2020 general election for president, or were you not able to vote?
-//     selectAnswerWithText(["biden"]);
-
-//     // auto-appears: For whom did you vote in the 2024 general election for president, or were you not able to vote?
-//     selectAnswerWithText(["harris"]);
-//   }
-// );
-
-// PanelFox.addPage(
-//   ["How important is politics to your personal identity?"],
-//   (information: Information) => {
-//     selectAnswerWithText(["very", "important"]);
-//   }
-// );
-
-// PanelFox.addPage(
-//   ["Are you, your family, or your friends affiliated or work with any political organizations or elected officials?"],
-//   (information: Information) => {
-//     selectAnswerWithText(["no"]);
-
-//     // auto-appears: Are you, your family, or your friends affiliated or work with any media or journalism organizations?
-//     selectAnswerWithText(["no"]);
-
-//     // auto-appears: Which of the following statements best describes you in a group situation?
-//     selectAnswerWithText(["no difficulty expressing my opinions"]);
-
-//     // auto-appears: This study will be fully completed online. Do you have a working desktop or laptop, fully functional webcam, stable internet connection, a quiet place to have a conversation on your computer? Devices like Chromebooks, cellphones, and Netbooks with Android operating system will not be able to functional for this study.
-//     selectAnswerAtIndex(9)
-//   }
-// );
-
-// PanelFox.addPage(
-//   ["In which time zone do you live?", "What region do you live in?"],
-//   (information: Information) => {
-//     selectAnswerWithText([information.tz]);
-
-//     var wnocaOptionExists = true;
-//     document.querySelectorAll(".option-label__tag").forEach((label) => {
-//       const text = (label.textContent ?? "").toLowerCase();
-//       ["west", "california"].forEach(
-//         (region) => (wnocaOptionExists &&= text.includes(region))
-//       );
-//     });
-
-//     var regionText: string[] = [];
-//     switch (information.region) {
-//       case "ne":
-//         regionText = ["north", "east"];
-//         break;
-//       case "mw":
-//         regionText = ["mid", "west"];
-//         break;
-//       case "s":
-//         regionText = ["south"];
-//         break;
-//       case "c":
-//         regionText = wnocaOptionExists ? ["california"] : ["west"];
-//         break; // TODO: fix this case, currently it doesn't matter since we live in non-CA states
-//       case "w":
-//         regionText = wnocaOptionExists ? ["west", "california"] : ["west"];
-//         break;
-//     }
-
-//     selectAnswerWithText(regionText);
-//   }
-// );
+PanelFox.addQuestion(
+  ["How important is politics to your personal identity?"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    const weightedOptions = []
+    weightedOptions.push(WeightedOption(["not", "important"], 0))
+    weightedOptions.push(WeightedOption(["very", "important"], 4))
+    weightedOptions.push(WeightedOption(["somewhat", "important"], 6))
+    const option = chooseWeightedOption(weightedOptions)
+    option && selectOptionWithText(element, option);
+  }
+);
 
 export default PanelFox;

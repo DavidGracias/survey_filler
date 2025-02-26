@@ -1,7 +1,11 @@
 import { Information } from "./Information";
 
 type MatchText = string[];
-type MatchAction = (information: Information, selector: string, i: number) => void;
+type MatchAction = (
+  information: Information,
+  selector: string,
+  i: number
+) => void;
 type Match = { text: MatchText; action: MatchAction };
 export type MatchedQuestion = Match & { i: number };
 
@@ -75,23 +79,45 @@ class SurveyAnswers implements SurveyAnswersContext {
   }
 
   getQuestionsFromDocument(document: Document): MatchedQuestion[] {
-    return this.getQuestions(document)
-      .map((question, i) => this.matchedQuestion(question, i))
-      .filter((question): question is MatchedQuestion => question !== null);
+    const documentQuestions = this.getQuestions(document);
+    const matchedQuestions: MatchedQuestion[] = [];
+    documentQuestions.forEach((docQuestion, i) => {
+      const question_i_match = this.getMatchedQuestion(
+        docQuestion,
+        i,
+        matchedQuestions
+      );
+      if (question_i_match) matchedQuestions.push(question_i_match);
+    });
+    return matchedQuestions;
   }
 
-  private matchedQuestion(
-    questionFound: HTMLElement,
-    i: number
+  private getMatchedQuestion(
+    documentQuestionI: HTMLElement,
+    i: number,
+    matchedQuestions: MatchedQuestion[]
   ): MatchedQuestion | null {
+    const question_i_matches: MatchedQuestion[] = [];
+
     for (let question of this.questions) {
-      var found = true;
-      for (let text of question.text) {
-        found &&= questionFound.outerHTML.includes(text);
-      }
-      if (found) return { ...question, i: i };
+      let found = true;
+
+      // Check if all text parts of the question are included in the document's outerHTML
+      for (let text of question.text)
+        found &&= documentQuestionI.outerHTML.includes(text);
+
+      if (found) question_i_matches.push({ ...question, i: i });
     }
-    return null;
+
+    // Filter out questions that have already been matched
+    const uniqueMatches = question_i_matches.filter(
+      (q) => !matchedQuestions.some((mq) => mq.text === q.text)
+    );
+
+    // return most relevant question (more matched text = higher relevance)
+    return uniqueMatches.sort(
+      (a, b) => b.text.join("").length - a.text.join("").length
+    )[0];
   }
 
   printQuestions(): void {

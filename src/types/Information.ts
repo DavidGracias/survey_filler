@@ -1,6 +1,6 @@
 export enum People {
   David,
-  Bela
+  Bela,
 }
 
 export enum Gender {
@@ -48,6 +48,7 @@ export enum EducationLevel {
   Associates = "a",
   BachelorScience = "bs",
   BachelorArts = "ba",
+  Masters = "m",
   PostGraduate = "pg",
   Other = "o",
 }
@@ -68,8 +69,29 @@ export enum Region {
   Unknown = "",
 }
 
+export enum Race {
+  Hispanic = "hispanic",
+  White = "white",
+  Black = "black",
+  Asian = "asian",
+  NativeAmerican = "native american",
+  Other = "other",
+}
+
+export enum NationOfOrigin {
+  USA = "United States",
+  Canada = "Canada",
+  Mexico = "Mexico",
+  China = "China",
+  India = "India",
+  Brazil = "Brazil",
+  Ecuador = "Ecuador",
+  Colombia = "Colombia",
+  // Add more nations as needed
+  Other = "Other",
+}
+
 export class Information {
-  
   firstName: string;
   middleName: string;
   lastName: string;
@@ -99,6 +121,8 @@ export class Information {
 
   educationLevel: EducationLevel;
   employment: Employment;
+  race: Race;
+  nationOfOrigin: NationOfOrigin;
 
   constructor(person: People) {
     switch (person) {
@@ -134,6 +158,9 @@ export class Information {
         };
         this.educationLevel = EducationLevel.BachelorScience;
 
+        this.race = Race.Hispanic;
+        this.nationOfOrigin = NationOfOrigin.Ecuador;
+
         break;
 
       case People.David:
@@ -168,22 +195,27 @@ export class Information {
           occupation: "Software Engineer",
           industry: "Technology",
           employer: "Atlassian",
-          salary: 145000
+          salary: 145000,
         };
         this.educationLevel = EducationLevel.BachelorScience;
 
+        this.race = Race.Hispanic;
+        this.nationOfOrigin = NationOfOrigin.Ecuador;
     }
 
+    [this.dob_month_text, this.dob_month_abv] = getMonthString(this.dob_month);
 
-    [this.dob_month_text, this.dob_month_abv] =  getMonthString(this.dob_month);
+    this.fullName =
+      `${this.firstName} ${this.middleName} ${this.lastName}`.trim();
 
-    this.fullName = `${this.firstName} ${this.middleName} ${this.lastName}`.trim();
+    this.address =
+      `${this.streetAddress} ${this.streetAddressII} ${this.city} ${this.stateAbbreviation}, ${this.zipcode}`.trim();
 
-    this.address = `${this.streetAddress} ${this.streetAddressII} ${this.city} ${this.stateAbbreviation}, ${this.zipcode}`.trim();
-    
     this.region = getRegion(this.state);
-    
-    this.dob_mmddyyyy_slash = `${ (this.dob_month < 10? "0" : "") +this.dob_month}/${this.dob_day}/${this.dob_year}`;
+
+    this.dob_mmddyyyy_slash = `${
+      (this.dob_month < 10 ? "0" : "") + this.dob_month
+    }/${this.dob_day}/${this.dob_year}`;
     this.age = getAge(this.dob_mmddyyyy_slash);
   }
 }
@@ -219,17 +251,70 @@ function getMonthString(month: number): [string, string] {
 }
 
 function getAge(birthday: string): number {
-    const millis = Date.now() - Date.parse(birthday);
-    return new Date(millis).getFullYear() - 1970;
+  const millis = Date.now() - Date.parse(birthday);
+  return new Date(millis).getFullYear() - 1970;
 }
 
 function getRegion(state: string): Region {
   const usRegions = {
-    [Region.Northeast]: ["Maine", "New Hampshire", "Vermont", "Massachusetts", "Rhode Island", "Connecticut", "New York", "New Jersey", "Pennsylvania"],
-    [Region.Midwest]: ["Ohio", "Indiana", "Illinois", "Michigan", "Wisconsin", "Minnesota", "Iowa", "Missouri", "North Dakota", "South Dakota", "Nebraska", "Kansas"],
-    [Region.South]: ["Delaware", "Maryland", "Virginia", "West Virginia", "North Carolina", "South Carolina", "Georgia", "Florida", "Kentucky", "Tennessee", "Alabama", "Mississippi", "Arkansas", "Louisiana", "Oklahoma", "Texas"],
-    [Region.West]: ["Montana", "Idaho", "Wyoming", "Colorado", "New Mexico", "Arizona", "Utah", "Nevada", "Oregon", "Washington", "Alaska", "Hawaii"],
-    [Region.California]: ["California"] // special case for many places
+    [Region.Northeast]: [
+      "Maine",
+      "New Hampshire",
+      "Vermont",
+      "Massachusetts",
+      "Rhode Island",
+      "Connecticut",
+      "New York",
+      "New Jersey",
+      "Pennsylvania",
+    ],
+    [Region.Midwest]: [
+      "Ohio",
+      "Indiana",
+      "Illinois",
+      "Michigan",
+      "Wisconsin",
+      "Minnesota",
+      "Iowa",
+      "Missouri",
+      "North Dakota",
+      "South Dakota",
+      "Nebraska",
+      "Kansas",
+    ],
+    [Region.South]: [
+      "Delaware",
+      "Maryland",
+      "Virginia",
+      "West Virginia",
+      "North Carolina",
+      "South Carolina",
+      "Georgia",
+      "Florida",
+      "Kentucky",
+      "Tennessee",
+      "Alabama",
+      "Mississippi",
+      "Arkansas",
+      "Louisiana",
+      "Oklahoma",
+      "Texas",
+    ],
+    [Region.West]: [
+      "Montana",
+      "Idaho",
+      "Wyoming",
+      "Colorado",
+      "New Mexico",
+      "Arizona",
+      "Utah",
+      "Nevada",
+      "Oregon",
+      "Washington",
+      "Alaska",
+      "Hawaii",
+    ],
+    [Region.California]: ["California"], // special case for many places
   };
 
   for (const region of Object.keys(usRegions) as (keyof typeof usRegions)[]) {
