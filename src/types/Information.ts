@@ -44,13 +44,27 @@ export enum EmploymentStatus {
 }
 
 export enum EducationLevel {
-  HighSchool = "hs",
-  Associates = "a",
-  BachelorScience = "bs",
-  BachelorArts = "ba",
-  Masters = "m",
-  PostGraduate = "pg",
-  Other = "o",
+  HighSchool = "high school",
+  Associates = "associates",
+  BachelorScience = "bachelors science",
+  BachelorArts = "bachelors arts",
+  Masters = "masters",
+  Doctorate = "doctorate",
+  Other = "other",
+}
+
+export enum PoliticalAffiliation {
+  Democrat = "democrat",
+  Republican = "republican",
+  LeanDemocrat = "lean democrat",
+  LeanRepublican = "lean republican",
+  Independent = "independent",
+  IndependentLeanDemocrat = "independent lean democrat",
+  IndependentLeanRepublican = "independent lean republican",
+  Libertarian = "libertarian",
+  Green = "green",
+  Communist = "communist",
+  Other = "other",
 }
 
 export enum Timezone {
@@ -74,7 +88,10 @@ export enum Race {
   White = "white",
   Black = "black",
   Asian = "asian",
+  PacificIslander = "pacific islander",
+  MiddleEastern = "middle eastern",
   NativeAmerican = "native american",
+  MixedRace = "mixed race",
   Other = "other",
 }
 
@@ -123,6 +140,10 @@ export class Information {
   employment: Employment;
   race: Race;
   nationOfOrigin: NationOfOrigin;
+  politicalAffiliation: PoliticalAffiliation;
+
+  hardcodedQuestionsEnabled: boolean;
+
 
   constructor(person: People) {
     switch (person) {
@@ -161,6 +182,9 @@ export class Information {
         this.race = Race.Hispanic;
         this.nationOfOrigin = NationOfOrigin.Ecuador;
 
+        this.politicalAffiliation = PoliticalAffiliation.IndependentLeanDemocrat;
+
+        this.hardcodedQuestionsEnabled = true;
         break;
 
       case People.David:
@@ -201,6 +225,10 @@ export class Information {
 
         this.race = Race.Hispanic;
         this.nationOfOrigin = NationOfOrigin.Ecuador;
+
+        this.politicalAffiliation = PoliticalAffiliation.IndependentLeanDemocrat;
+
+        this.hardcodedQuestionsEnabled = true;
     }
 
     [this.dob_month_text, this.dob_month_abv] = getMonthString(this.dob_month);

@@ -1,11 +1,17 @@
 import SurveyAnswers from "../types/SurveyAnswers";
 import { Information } from "../types/Information";
 import { WeightedOption, chooseWeightedOption } from "./util/WeightedOptions";
+import { ageAtDate } from "./util/ageAtDate";
 
 const PanelFox = new SurveyAnswers({
   nextButtonAction: "button.big",
   questionSelector: ".SortableItem",
-  additionalContext: [selectOptionWithText, ageAtDate, WeightedOption, chooseWeightedOption],
+  additionalContext: [
+    selectOptionWithText,
+    ageAtDate,
+    WeightedOption,
+    chooseWeightedOption,
+  ],
 });
 
 function selectOptionWithText(questionElement: HTMLElement, needles: string[]) {
@@ -18,12 +24,6 @@ function selectOptionWithText(questionElement: HTMLElement, needles: string[]) {
       needles.forEach((needle) => (found &&= haystack.includes(needle)));
       if (found) (option_label as HTMLDivElement).click();
     });
-}
-
-function ageAtDate(dob: string, date: string): number {
-  const dobMillis = Date.parse(dob);
-  const dateMillis = Date.parse(date);
-  return new Date(dateMillis - dobMillis).getUTCFullYear() - 1970;
 }
 
 PanelFox.addQuestion(
@@ -59,13 +59,41 @@ PanelFox.addQuestion(
   }
 );
 PanelFox.addQuestion(
+  ["Phone"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    (element.querySelector("input") as HTMLInputElement).value =
+      information.phone;
+  }
+);
+PanelFox.addQuestion(
+  ["City"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    (element.querySelector("input") as HTMLInputElement).value =
+      information.city;
+  }
+);
+PanelFox.addQuestion(
+  ["Zip"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    (element.querySelector("input") as HTMLInputElement).value =
+      information.zipcode;
+  }
+);
+
+
+PanelFox.addQuestion(
   [
     "Do you certify that the information you provide on this survey is true and accurate",
   ],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
     selectOptionWithText(element, ["yes"]);
-  }
+  },
+  false,
+  true
 );
 
 PanelFox.addQuestion(
@@ -73,7 +101,9 @@ PanelFox.addQuestion(
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
     selectOptionWithText(element, ["email"]);
-  }
+  },
+  false,
+  true
 );
 
 PanelFox.addQuestion(
@@ -116,14 +146,16 @@ PanelFox.addQuestion(
 
     const option = chooseWeightedOption(weightedOptions);
     option && selectOptionWithText(element, option);
-  }
+  },
+  false,
+  true
 );
 
 PanelFox.addQuestion(
   ["Are you of Hispanic, Latino, or Spanish origin or descent?"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
-    selectOptionWithText(element, ["yes"]);
+    selectOptionWithText(element, [information.race == "hispanic" ? "yes" : "no"]);
   }
 );
 
@@ -131,23 +163,7 @@ PanelFox.addQuestion(
   ["your", "race", "ethnicity"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
-    selectOptionWithText(element, ["hispanic"]);
-  }
-);
-
-PanelFox.addQuestion(
-  ["Were you born in the United States?"],
-  (information: Information, selector: string, i: number) => {
-    const element = document.querySelectorAll(selector)[i] as HTMLElement;
-    selectOptionWithText(element, ["yes"]);
-  }
-);
-
-PanelFox.addQuestion(
-  ["What is your family's background of nation of origin?"],
-  (information: Information, selector: string, i: number) => {
-    const element = document.querySelectorAll(selector)[i] as HTMLElement;
-    selectOptionWithText(element, [information.nationOfOrigin.slice(0, -1)]);
+    selectOptionWithText(element, information.race.toString().split(" "));
   }
 );
 
@@ -182,30 +198,19 @@ PanelFox.addQuestion(
 );
 
 PanelFox.addQuestion(
-  ["What is the last year of schooling that you have completed?"],
+  ["What is your exact age?"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
-    let selectText: string[] = [];
-    switch (information.educationLevel) {
-      case "hs":
-        selectText = ["high", "school", "diploma"];
-        break;
-      case "a":
-        selectText = ["associate", "degree"];
-        break;
-      case "bs":
-      case "ba":
-        selectText = ["bachelor", "degree"];
-        break;
-      case "m":
-        selectText = ["master", "degree"];
-        break;
-      case "pg":
-        selectText = ["doctor", "degree"];
-        break;
-    }
+    (element.querySelector("input") as HTMLInputElement).value =
+      information.age.toString();
+  }
+);
 
-    selectText && selectOptionWithText(element, selectText);
+PanelFox.addQuestion(
+  ["schooling", "you", "completed"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    selectOptionWithText(element, [information.educationLevel.split(" ")[0].substring(0, -1)]);
   }
 );
 
@@ -221,8 +226,64 @@ PanelFox.addQuestion(
   ["Democrat", "Republican", "Independent", "else"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
-    selectOptionWithText(element, ["independent", "dem"]);
+    let options: string[] = [];
+    switch (information.politicalAffiliation) {
+      case "democrat":
+        options = ["strong", "democrat"];
+        break;
+      case "republican":
+        options = ["strong", "republican"];
+        break;
+      case "lean democrat":
+        options = ["lean", "democrat"];
+        break;
+      case "lean republican":
+        options = ["lean", "republican"];
+        break;
+      case "independent":
+        options = ["independent", "no", "lean"];
+        break;
+      case "independent lean democrat":
+        options = ["independent", "dem"];
+        break;
+      case "independent lean republican":
+        options = ["independent", "rep"];
+        break;
+      case "libertarian":
+      case "green":
+      case "communist":
+        case "other":
+        options = ["other"];
+        (element.querySelector("input") as HTMLInputElement).value = information.politicalAffiliation;
+        break;
+    }
+    selectOptionWithText(element, options);
   }
+);
+
+PanelFox.addQuestion(
+  ["How important is politics to your personal identity?"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    const weightedOptions = [];
+    weightedOptions.push(WeightedOption(["not", "important"], 0));
+    weightedOptions.push(WeightedOption(["very", "important"], 4));
+    weightedOptions.push(WeightedOption(["somewhat", "important"], 6));
+    const option = chooseWeightedOption(weightedOptions);
+    option && selectOptionWithText(element, option);
+  },
+  false,
+  true,
+);
+
+PanelFox.addQuestion(
+  ["you", "family", "friend", "work", "any"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    selectOptionWithText(element, ["no"]);
+  },
+  true,
+  true,
 );
 
 PanelFox.addQuestion(
@@ -232,7 +293,9 @@ PanelFox.addQuestion(
     if (ageAtDate(information.dob_mmddyyyy_slash, "2020-11-03") < 18)
       selectOptionWithText(element, ["not", "eligible"]);
     else selectOptionWithText(element, ["biden"]);
-  }
+  },
+  false,
+  true
 );
 
 PanelFox.addQuestion(
@@ -242,19 +305,46 @@ PanelFox.addQuestion(
     if (ageAtDate(information.dob_mmddyyyy_slash, "2024-11-05") < 18)
       selectOptionWithText(element, ["not", "eligible"]);
     else selectOptionWithText(element, ["harris"]);
-  }
+  },
+  false,
+  true
 );
 
 PanelFox.addQuestion(
-  ["How important is politics to your personal identity?"],
+  ["describes", "you", "group"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
-    const weightedOptions = []
-    weightedOptions.push(WeightedOption(["not", "important"], 0))
-    weightedOptions.push(WeightedOption(["very", "important"], 4))
-    weightedOptions.push(WeightedOption(["somewhat", "important"], 6))
-    const option = chooseWeightedOption(weightedOptions)
-    option && selectOptionWithText(element, option);
+    selectOptionWithText(element, ["no difficulty", "enjoy", "group discussion"]);
+  },
+  false,
+  true
+);
+
+PanelFox.addQuestion(
+  ["Do you have a working", "webcam", "internet", "quiet"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    selectOptionWithText(element, ["yes"]);
+  },
+  true,
+  true
+);
+
+PanelFox.addQuestion(
+  ["Were you born in the United States?"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    selectOptionWithText(element, ["yes"]);
+  },
+  false,
+  true
+);
+
+PanelFox.addQuestion(
+  ["nation", "of", "origin"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    selectOptionWithText(element, [information.nationOfOrigin.slice(0, -1)]);
   }
 );
 

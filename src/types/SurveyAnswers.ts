@@ -6,7 +6,7 @@ type MatchAction = (
   selector: string,
   i: number
 ) => void;
-type Match = { text: MatchText; action: MatchAction };
+type Match = { text: MatchText; action: MatchAction, canDuplicate: boolean, hardcoded: boolean };
 export type MatchedQuestion = Match & { i: number };
 
 type SurveyAnswersContext = {
@@ -56,7 +56,7 @@ class SurveyAnswers implements SurveyAnswersContext {
     this.additionalContext = c.additionalContext;
   }
 
-  addQuestion(questionText: MatchText, questionAction: MatchAction): void {
+  addQuestion(questionText: MatchText, questionAction: MatchAction, canDuplicate: boolean = false, hardcoded: boolean = false): void {
     const questionPromise = new Promise<void>((resolve, reject) => {
       if (
         this.questions.some(
@@ -66,7 +66,7 @@ class SurveyAnswers implements SurveyAnswersContext {
       ) {
         reject(new Error("Question already exists for: " + questionText));
       } else {
-        this.questions.push({ text: questionText, action: questionAction });
+        this.questions.push({ text: questionText, action: questionAction, canDuplicate: canDuplicate, hardcoded: hardcoded });
         resolve();
       }
     });
@@ -111,7 +111,7 @@ class SurveyAnswers implements SurveyAnswersContext {
 
     // Filter out questions that have already been matched
     const uniqueMatches = question_i_matches.filter(
-      (q) => !matchedQuestions.some((mq) => mq.text === q.text)
+      (q) => !matchedQuestions.some((mq) => !mq.canDuplicate && mq.text === q.text)
     );
 
     // return most relevant question (more matched text = higher relevance)

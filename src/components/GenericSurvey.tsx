@@ -28,7 +28,11 @@ export default function GenericSurvey({
   }, []);
 
   useEffect(() => {
-    setMatchedQuestions(surveyAnswer.getQuestionsFromDocument(document));
+    let matchedQuestions = surveyAnswer.getQuestionsFromDocument(document);
+    if (!information.hardcodedQuestionsEnabled) {
+      matchedQuestions = matchedQuestions.filter((question) => !question.hardcoded);
+    }
+    setMatchedQuestions(matchedQuestions);
   }, [document]);
 
   useEffect(() => {
