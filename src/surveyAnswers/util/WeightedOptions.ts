@@ -1,21 +1,21 @@
-export type WeightedOption = {
-  options: string[];
+export type WeightedOption<T> = {
+  options: T;
   weight: number;
 };
 
-export function WeightedOption(
-  options: string[],
+export function WeightedOption<T>(
+  options: T,
   weight: number
-): WeightedOption {
+): WeightedOption<T> {
   if (weight < 0) throw new Error("Weight must be greater than 0");
   return {
     options: options,
     weight: weight,
   };
 }
-export function chooseWeightedOption(
-  weightedOptions: WeightedOption[]
-): string[] | null {
+export function chooseWeightedOption<T>(
+  weightedOptions: WeightedOption<T>[]
+): T | null {
   const totalWeight = weightedOptions.reduce(
     (acc, option) => acc + option.weight,
     0

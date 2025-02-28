@@ -1,7 +1,8 @@
 import SurveyAnswers from "../types/SurveyAnswers";
 import { Information } from "../types/Information";
 import { WeightedOption, chooseWeightedOption } from "./util/WeightedOptions";
-import { ageAtDate } from "./util/ageAtDate";
+import { ageAtDate } from "./util/Age";
+import { indexFromRanges } from "./util/IndexFromRange";
 
 const PanelFox = new SurveyAnswers({
   nextButtonAction: "button.big",
@@ -9,6 +10,7 @@ const PanelFox = new SurveyAnswers({
   additionalContext: [
     selectOptionWithText,
     ageAtDate,
+    indexFromRanges,
     WeightedOption,
     chooseWeightedOption,
   ],
@@ -83,7 +85,6 @@ PanelFox.addQuestion(
   }
 );
 
-
 PanelFox.addQuestion(
   [
     "Do you certify that the information you provide on this survey is true and accurate",
@@ -155,7 +156,9 @@ PanelFox.addQuestion(
   ["Are you of Hispanic, Latino, or Spanish origin or descent?"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
-    selectOptionWithText(element, [information.race == "hispanic" ? "yes" : "no"]);
+    selectOptionWithText(element, [
+      information.race == "hispanic" ? "yes" : "no",
+    ]);
   }
 );
 
@@ -174,26 +177,8 @@ PanelFox.addQuestion(
     const options: NodeListOf<HTMLElement> =
       element.querySelectorAll(".option-label__tag");
 
-    let under: number | undefined, over: number;
-
-    Array.from(options)
-      .filter((option) => option.textContent!.includes("-"))
-      .forEach((option) => {
-        var [lower, higher] = option.textContent!.trim().split("-");
-        if (
-          parseInt(lower) <= information.age &&
-          information.age <= parseInt(higher)
-        )
-          option.click();
-
-        if (under == undefined) under = parseInt(lower);
-        over = parseInt(higher);
-      });
-    if (information.age < under!) {
-      options[0].click();
-    } else if (information.age > over!) {
-      options[options.length - 1].click();
-    }
+    const index = indexFromRanges(Array.from(options), information.age);
+    if (index != -1) options[index].click();
   }
 );
 
@@ -210,7 +195,9 @@ PanelFox.addQuestion(
   ["schooling", "you", "completed"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
-    selectOptionWithText(element, [information.educationLevel.split(" ")[0].substring(0, -1)]);
+    selectOptionWithText(element, [
+      information.educationLevel.split(" ")[0].substring(0, -1),
+    ]);
   }
 );
 
@@ -252,9 +239,10 @@ PanelFox.addQuestion(
       case "libertarian":
       case "green":
       case "communist":
-        case "other":
+      case "other":
         options = ["other"];
-        (element.querySelector("input") as HTMLInputElement).value = information.politicalAffiliation;
+        (element.querySelector("input") as HTMLInputElement).value =
+          information.politicalAffiliation;
         break;
     }
     selectOptionWithText(element, options);
@@ -273,7 +261,7 @@ PanelFox.addQuestion(
     option && selectOptionWithText(element, option);
   },
   false,
-  true,
+  true
 );
 
 PanelFox.addQuestion(
@@ -283,7 +271,7 @@ PanelFox.addQuestion(
     selectOptionWithText(element, ["no"]);
   },
   true,
-  true,
+  true
 );
 
 PanelFox.addQuestion(
@@ -314,7 +302,11 @@ PanelFox.addQuestion(
   ["describes", "you", "group"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
-    selectOptionWithText(element, ["no difficulty", "enjoy", "group discussion"]);
+    selectOptionWithText(element, [
+      "no difficulty",
+      "enjoy",
+      "group discussion",
+    ]);
   },
   false,
   true

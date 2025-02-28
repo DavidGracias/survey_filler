@@ -19,12 +19,14 @@ import PanelFox from "../surveyAnswers/PanelFox";
 import PRC from "../surveyAnswers/PRC";
 import RecruitAndField from "../surveyAnswers/RecruitAndField";
 import AdlerWeiner from "../surveyAnswers/AdlerWeiner";
+import FocusInsite from "../surveyAnswers/FocusInsite";
 
 enum SurveyProviders {
   PRC,
   FieldWork,
   RecruitAndField,
   AdlerWeiner,
+  FocusInsite,
   // Hilton,
   Unknown,
 }
@@ -34,6 +36,7 @@ const surveyAnswers: Record<SurveyProviders, SurveyAnswers | undefined> = {
   [SurveyProviders.FieldWork]: PanelFox,
   [SurveyProviders.RecruitAndField]: RecruitAndField,
   [SurveyProviders.AdlerWeiner]: AdlerWeiner,
+  [SurveyProviders.FocusInsite]: FocusInsite,
   // [SurveyProviders.Hilton]: undefined,
   [SurveyProviders.Unknown]: undefined,
 };

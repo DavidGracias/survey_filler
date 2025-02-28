@@ -105,7 +105,7 @@ export default function GenericSurvey({
           <List>
             {matchedQuestions.map((question) => (
               <ListItem dense={true}>
-                <ListItemText primary={question.text} />
+                <ListItemText primary={JSON.stringify(question.text)} />
               </ListItem>
             ))}
           </List>
@@ -116,6 +116,7 @@ export default function GenericSurvey({
 }
 
 function triggerNextButton(tabId: number, surveyAnswer: SurveyAnswers) {
+  return;
   setTimeout(
     () =>
       chrome.scripting.executeScript({
