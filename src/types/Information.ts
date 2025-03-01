@@ -19,9 +19,19 @@ export enum MaritalStatus {
   DomesticPartner = "domestic partner",
 }
 
-export interface Child {
+export enum Relationship {
+  Child = "child",
+  SignificantOther = "significant other",
+  Parent = "parent",
+  OtherFamily = "other family",
+  Other = "other",
+}
+
+export interface Housemate {
+  name: string;
   age: number;
-  liveAtHome: boolean;
+  gender: Gender;
+  relationship: Relationship;
 }
 
 export interface Employment {
@@ -33,7 +43,8 @@ export interface Employment {
 }
 
 export enum EmploymentStatus {
-  FullTime = "full time",
+  FullTimeInPerson = "full time in person",
+  FullTimeRemote = "full time remote",
   PartTime = "part time",
   SelfEmployed = "self employed",
   Student = "student",
@@ -115,12 +126,12 @@ export class Information {
   fullName: string;
   gender: Gender;
   maritalStatus: MaritalStatus;
-  children: Child[];
+  household: Housemate[];
   age: number;
   email: string;
   phone: string;
   streetAddress: string;
-  streetAddressII: string;
+  streetAddressII: string | null;
   city: string;
   state: string;
   stateAbbreviation: string;
@@ -155,7 +166,14 @@ export class Information {
         this.gender = Gender.Female;
 
         this.maritalStatus = MaritalStatus.Married;
-        this.children = [];
+        this.household = [
+          {
+            name: "David Garcia",
+            age: getAge("01/30/2001"),
+            gender: Gender.Male,
+            relationship: Relationship.SignificantOther,
+          },
+        ];
 
         this.email = "izabela.quintas55@gmail.com";
         this.phone = "7082052545";
@@ -196,13 +214,20 @@ export class Information {
         this.gender = Gender.Male;
 
         this.maritalStatus = MaritalStatus.Married;
-        this.children = [];
+        this.household = [
+          {
+            name: "Izabela Quintas",
+            age: getAge("11/17/2000"),
+            gender: Gender.Female,
+            relationship: Relationship.SignificantOther,
+          },
+        ];
 
         this.email = "davidg0130@gmail.com";
         this.phone = "7038538605";
 
         this.streetAddress = "4219 W Purdue Ave.";
-        this.streetAddressII = "";
+        this.streetAddressII = null;
         this.city = "Phoenix";
         this.state = "Arizona";
         this.stateAbbreviation = "AZ";
@@ -215,7 +240,7 @@ export class Information {
         this.dob_day = 30;
 
         this.employment = {
-          status: EmploymentStatus.FullTime,
+          status: EmploymentStatus.FullTimeRemote,
           occupation: "Software Engineer",
           industry: "Technology",
           employer: "Atlassian",

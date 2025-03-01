@@ -17,6 +17,7 @@ export default function GenericSurvey({
   const [matchedQuestions, setMatchedQuestions] = useState<MatchedQuestion[]>(
     []
   );
+  const [numUnmatchedQuestions, setNumUnmatchedQuestions] = useState<number>(0);
   const document = useMemo(
     () => new DOMParser().parseFromString(body, "text/html"),
     [body]
@@ -28,11 +29,12 @@ export default function GenericSurvey({
   }, []);
 
   useEffect(() => {
-    let matchedQuestions = surveyAnswer.getQuestionsFromDocument(document);
+    let [matchedQuestions, allQuestionsMatched] = surveyAnswer.getQuestionsFromDocument(document);
     if (!information.hardcodedQuestionsEnabled) {
-      matchedQuestions = matchedQuestions.filter((question) => !question.hardcoded);
+      matchedQuestions = matchedQuestions.filter((question) => !question.options.hardcoded);
     }
     setMatchedQuestions(matchedQuestions);
+    setNumUnmatchedQuestions(allQuestionsMatched);
   }, [document]);
 
   useEffect(() => {
@@ -63,13 +65,16 @@ export default function GenericSurvey({
         window.alert("DEBUG_MODE is enabled, skipping pressNextButton()");
         return; // don't auto-continue if in debug mode
       }
-      triggerNextButton(tabId, surveyAnswer);
+
+      if (numUnmatchedQuestions == 0) {
+        triggerNextButton(tabId, surveyAnswer);
+      }
     });
   }, [matchedQuestions]);
 
   return (
     <Container>
-      {!matchedQuestions.length ? (
+      {!numUnmatchedQuestions && !matchedQuestions.length ? (
         <>
           <Typography variant="h5">
             Unable to load / find questions related to the survey. Please try
@@ -99,6 +104,11 @@ export default function GenericSurvey({
               <Divider />
             </>
           )}
+          {numUnmatchedQuestions && (
+            <Typography variant="h6">
+              {numUnmatchedQuestions} questions were not matched and need to be processed manually.
+            </Typography>
+          )}
           <Typography variant="h6">
             Currently handling page associated with these questions:
           </Typography>
@@ -116,7 +126,6 @@ export default function GenericSurvey({
 }
 
 function triggerNextButton(tabId: number, surveyAnswer: SurveyAnswers) {
-  return;
   setTimeout(
     () =>
       chrome.scripting.executeScript({

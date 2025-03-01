@@ -93,8 +93,7 @@ PanelFox.addQuestion(
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
     selectOptionWithText(element, ["yes"]);
   },
-  false,
-  true
+  { hardcoded: true }
 );
 
 PanelFox.addQuestion(
@@ -103,8 +102,7 @@ PanelFox.addQuestion(
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
     selectOptionWithText(element, ["email"]);
   },
-  false,
-  true
+  { hardcoded: true }
 );
 
 PanelFox.addQuestion(
@@ -148,8 +146,7 @@ PanelFox.addQuestion(
     const option = chooseWeightedOption(weightedOptions);
     option && selectOptionWithText(element, option);
   },
-  false,
-  true
+  { hardcoded: true }
 );
 
 PanelFox.addQuestion(
@@ -260,8 +257,7 @@ PanelFox.addQuestion(
     const option = chooseWeightedOption(weightedOptions);
     option && selectOptionWithText(element, option);
   },
-  false,
-  true
+  { hardcoded: true }
 );
 
 PanelFox.addQuestion(
@@ -270,8 +266,7 @@ PanelFox.addQuestion(
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
     selectOptionWithText(element, ["no"]);
   },
-  true,
-  true
+  { canDuplicate: true, hardcoded: true }
 );
 
 PanelFox.addQuestion(
@@ -282,8 +277,7 @@ PanelFox.addQuestion(
       selectOptionWithText(element, ["not", "eligible"]);
     else selectOptionWithText(element, ["biden"]);
   },
-  false,
-  true
+  { hardcoded: true }
 );
 
 PanelFox.addQuestion(
@@ -294,8 +288,7 @@ PanelFox.addQuestion(
       selectOptionWithText(element, ["not", "eligible"]);
     else selectOptionWithText(element, ["harris"]);
   },
-  false,
-  true
+  { hardcoded: true }
 );
 
 PanelFox.addQuestion(
@@ -308,8 +301,7 @@ PanelFox.addQuestion(
       "group discussion",
     ]);
   },
-  false,
-  true
+  { hardcoded: true }
 );
 
 PanelFox.addQuestion(
@@ -318,8 +310,7 @@ PanelFox.addQuestion(
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
     selectOptionWithText(element, ["yes"]);
   },
-  true,
-  true
+  { canDuplicate: true, hardcoded: true }
 );
 
 PanelFox.addQuestion(
@@ -328,8 +319,7 @@ PanelFox.addQuestion(
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
     selectOptionWithText(element, ["yes"]);
   },
-  false,
-  true
+  { hardcoded: true }
 );
 
 PanelFox.addQuestion(

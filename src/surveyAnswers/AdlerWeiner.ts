@@ -3,9 +3,18 @@ import { Information } from "../types/Information";
 import { chooseWeightedOption } from "./util/WeightedOptions";
 import { WeightedOption } from "./util/WeightedOptions";
 import { indexFromRanges } from "./util/IndexFromRange";
+import { setInputValue } from "./util/InputValues";
 
 const AdlerWeiner = new SurveyAnswers({
-  nextButtonAction: "button[type='submit']",
+  nextButtonAction: () => {
+    const buttons: HTMLButtonElement[] = Array.from(
+      document.querySelectorAll("button[type='submit']")
+    );
+    const button = buttons.find(
+      (button) => button.textContent?.trim() === "Next"
+    );
+    button?.click();
+  },
   questionSelector: "div.question-container",
   additionalContext: [
     WeightedOption,
@@ -13,6 +22,7 @@ const AdlerWeiner = new SurveyAnswers({
     selectOptionWithText,
     indexFromRanges,
     pressLabelIfNotChecked,
+    setInputValue,
   ],
 });
 
@@ -43,8 +53,7 @@ AdlerWeiner.addQuestion(
       pressLabelIfNotChecked(label);
     }
   },
-  false,
-  true
+  { hardcoded: true }
 );
 
 AdlerWeiner.addQuestion(
@@ -77,6 +86,38 @@ AdlerWeiner.addQuestion(
 );
 
 AdlerWeiner.addQuestion(
+  [
+    "CONTACT INFO",
+    "the following",
+    "First and Last Name",
+    "Mailing Address",
+    "Apt",
+    "City/Town",
+    "State/Province",
+    "ZIP/Postal Code",
+    "Email Address",
+    "Cell Phone Number",
+  ],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    const inputs = element.querySelectorAll("input");
+    const answers = [
+      information.fullName,
+      information.streetAddress,
+      information.streetAddressII ?? "N/a",
+      information.city,
+      information.state,
+      information.zipcode,
+      information.email,
+      information.phone,
+    ];
+    for (let i = 0; i < inputs.length; i++) {
+      (inputs[i] as HTMLInputElement).value = answers[i];
+    }
+  }
+);
+
+AdlerWeiner.addQuestion(
   ["Which area of the country is your permanent residence?"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
@@ -96,7 +137,42 @@ AdlerWeiner.addQuestion(
 );
 
 AdlerWeiner.addQuestion(
-  ["gender", "identify"],
+  ["Where in the country do you live?"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
+    switch (information.region) {
+      case "c":
+        const weightedOptions = [];
+        weightedOptions.push(WeightedOption(["Southern CA"], 1));
+        weightedOptions.push(WeightedOption(["Northern CA"], 1));
+        const option = chooseWeightedOption(weightedOptions);
+        if (option) selectOptionWithText(element, option);
+        break;
+      case "w":
+        selectOptionWithText(element, ["West outside of CA"]);
+        break;
+      case "mw":
+        if (information.state == "illinois") {
+          selectOptionWithText(element, ["Illinois"]);
+        } else {
+          selectOptionWithText(element, ["Midwest outside of Illinois"]);
+        }
+        break;
+        case "s":
+          selectOptionWithText(element, ["South"]);
+          break;
+        case "ne":
+          selectOptionWithText(element, ["Northeast"]);
+          break;
+        default:
+          selectOptionWithText(element, ["East"]);
+    }
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["gender", "identi"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
 
@@ -117,7 +193,38 @@ AdlerWeiner.addQuestion(
 );
 
 AdlerWeiner.addQuestion(
+  ["Are you", "male", "female", "non binary", "self describe"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
+    let gender = "other";
+    switch (information.gender) {
+      case "m":
+        gender = "male";
+        break;
+      case "f":
+        gender = "female";
+        break;
+      case "n":
+        gender = "non binary";
+        break;
+    }
+    selectOptionWithText(element, [gender]);
+  }
+);
+
+AdlerWeiner.addQuestion(
   ["age", "group"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    const options = Array.from(element.querySelectorAll("label"));
+    const index = indexFromRanges(options, information.age);
+    if (index != -1) pressLabelIfNotChecked(options[index]);
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["age", "category"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
     const options = Array.from(element.querySelectorAll("label"));
@@ -131,6 +238,22 @@ AdlerWeiner.addQuestion(
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
     element.querySelector("input")!.value = information.age.toString();
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["What is your exact age and date of birth?"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    const inputs = Array.from(element.querySelectorAll("input"));
+
+    const answers = [
+      information.age.toString(),
+      information.dob_mmddyyyy_slash
+    ];
+    for (let i = 0; i < inputs.length; i++) {
+      setInputValue(inputs[i] as HTMLInputElement, answers[i]);
+    }
   }
 );
 
@@ -156,7 +279,36 @@ AdlerWeiner.addQuestion(
       case "mixed race":
       case "other":
         selectOptionWithText(element, ["other"]);
-        element.querySelector("input")!.value = information.race;
+
+        setInputValue(element.querySelector("input")!, information.race);
+        break;
+    }
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["ethnic", "background"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    switch (information.race) {
+      case "white":
+        selectOptionWithText(element, ["white"]);
+        break;
+      case "black":
+        selectOptionWithText(element, ["black"]);
+        break;
+      case "asian":
+        selectOptionWithText(element, ["asian"]);
+        break;
+      case "hispanic":
+        selectOptionWithText(element, ["hispanic"]);
+        break;
+      case "native american":
+      case "middle eastern":
+      case "mixed race":
+      case "other":
+        selectOptionWithText(element, ["other"]);
+        setInputValue(element.querySelector("input")!, information.race);
         break;
     }
   }
@@ -178,8 +330,7 @@ AdlerWeiner.addQuestion(
 
     if (option) selectOptionWithText(element, option);
   },
-  false,
-  true
+  { hardcoded: true }
 );
 
 AdlerWeiner.addQuestion(
@@ -193,12 +344,9 @@ AdlerWeiner.addQuestion(
     weightedOptions.push(WeightedOption("Cannabis Consumption", 1));
     const option = chooseWeightedOption(weightedOptions);
 
-    const input = element.querySelector("input")!;
-    input.value = option!;
-    input.dispatchEvent(new Event("input", { bubbles: true }));
+    setInputValue(element.querySelector("input")!, option!);
   },
-  false,
-  true
+  { hardcoded: true }
 );
 
 AdlerWeiner.addQuestion(
@@ -212,8 +360,104 @@ AdlerWeiner.addQuestion(
       if (text.includes("none of the above")) pressLabelIfNotChecked(label);
     }
   },
-  true,
-  true
+  { hardcoded: true }
+);
+
+AdlerWeiner.addQuestion(
+  ["you", "household", "employed", "retired", "companies"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
+    const labels = Array.from(element.querySelectorAll("label"));
+    for (const label of labels) {
+      const text = label.innerText.toLowerCase();
+      if (text.includes("none of the above")) pressLabelIfNotChecked(label);
+    }
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["category", "describes", "employ", "status"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
+    let status: string[] = [];
+    switch (information.employment.status) {
+      case "full time in person":
+        status = ["full", "time", "outside"];
+        break;
+      case "self employed":
+      case "full time remote":
+        status = ["full", "time", "work from home"];
+        break;
+      case "part time":
+        status = ["part", "time"];
+        break;
+      case "student":
+        status = ["student"];
+        break;
+      case "homemaker":
+        status = ["homemaker"];
+        break;
+      case "retired":
+      case "other":
+      case "unemployed":
+        status = ["unemployed"];
+        break;
+    }
+    selectOptionWithText(element, status);
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["provide", "employment", "information"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
+    const answers = [
+      information.employment.occupation,
+      information.employment.employer,
+      information.employment.industry,
+    ];
+    const inputs = element.querySelectorAll("input");
+    for (let i = 0; i < answers.length; i++) {
+      setInputValue(inputs[i], answers[i] || "N/A");
+    }
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["describes", "employment", "status"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
+    let status: string[] = [];
+    switch (information.employment.status) {
+      case "full time in person":
+        case "full time remote":
+        status = ["full", "time"];
+        break;
+      case "part time":
+        status = ["part", "time"];
+        break;
+      case "self employed":
+        status = ["self", "employed"];
+        break;
+      case "student":
+        status = ["student", "not working"];
+        break;
+      case "homemaker":
+        status = ["homemaker"];
+        break;
+      case "retired":
+      case "other":
+      case "unemployed":
+        status = ["unemployed"];
+        break;
+    }
+    selectOptionWithText(element, status);
+  },
+  { canDuplicate: true }
 );
 
 AdlerWeiner.addQuestion(
@@ -228,6 +472,103 @@ AdlerWeiner.addQuestion(
 );
 
 AdlerWeiner.addQuestion(
+  ["annual", "household", "income"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
+    const labels = Array.from(element.querySelectorAll("label"));
+    const index = indexFromRanges(labels, information.employment?.salary ?? 0);
+    if (index != -1) pressLabelIfNotChecked(labels[index]);
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["living", "situation"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
+    let option = [];
+    if (information.household.length === 0) {
+      option = ["alone"];
+    } else if (
+      information.household.filter(
+        (housemate) => housemate.relationship === "significant other"
+      ).length > 0
+    ) {
+      option = ["significant other"];
+      const children = information.household.filter(
+        (housemate) => housemate.relationship === "child"
+      );
+      if (children.length > 0) {
+        option.push("children");
+        if (children.some((child) => child.age < 12)) {
+          option.push("12", "under");
+        } else {
+          option.push("13", "older");
+        }
+      }
+    } else if (
+      information.household.filter(
+        (housemate) => housemate.relationship === "other"
+      ).length == information.household.length
+    ) {
+      option = ["roommate"];
+    } else {
+      option = ["family"];
+    }
+
+    selectOptionWithText(element, option);
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["Are you...", "single", "married"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
+    switch (information.maritalStatus) {
+      case "single":
+        selectOptionWithText(element, ["single"]);
+        break;
+      case "married":
+        selectOptionWithText(element, ["married"]);
+        break;
+      case "domestic partner":
+      case "living with significant other":
+        selectOptionWithText(element, ["cohabitat"]);
+        break;
+      case "separated":
+      case "divorced":
+        selectOptionWithText(element, ["divorce", "separate"]);
+        break;
+      case "widowed":
+        selectOptionWithText(element, ["widow"]);
+        break;
+    }
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["currently", "children", "under 18", "household"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
+    const childrenUnder18 = information.household
+      .filter((housemate) => housemate.relationship === "child")
+      .filter((child) => child.age <= 18);
+    if (childrenUnder18.length > 0) {
+      selectOptionWithText(element, ["yes"]);
+      setInputValue(
+        element.querySelector("input")!,
+        childrenUnder18.map((child) => child.age).join(", ")
+      );
+    } else {
+      selectOptionWithText(element, ["no"]);
+    }
+  }
+);
+
+AdlerWeiner.addQuestion(
   ["week", "how many hours do you", "watch"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
@@ -235,8 +576,7 @@ AdlerWeiner.addQuestion(
       pressLabelIfNotChecked(label);
     });
   },
-  false,
-  true
+  { hardcoded: true }
 );
 
 export default AdlerWeiner;

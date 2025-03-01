@@ -1,4 +1,5 @@
 import { Information } from "./Information";
+import { DEBUG_MODE } from "../App";
 
 type MatchText = string[];
 type MatchAction = (
@@ -6,8 +7,13 @@ type MatchAction = (
   selector: string,
   i: number
 ) => void;
-type Match = { text: MatchText; action: MatchAction, canDuplicate: boolean, hardcoded: boolean };
+type Match = { text: MatchText; action: MatchAction; options: QuestionOptions };
 export type MatchedQuestion = Match & { i: number };
+
+export type QuestionOptions = {
+  canDuplicate: boolean;
+  hardcoded: boolean;
+};
 
 type SurveyAnswersContext = {
   nextButtonAction: (selector: string | null) => void;
@@ -56,17 +62,32 @@ class SurveyAnswers implements SurveyAnswersContext {
     this.additionalContext = c.additionalContext;
   }
 
-  addQuestion(questionText: MatchText, questionAction: MatchAction, canDuplicate: boolean = false, hardcoded: boolean = false): void {
+  addQuestion(
+    questionText: MatchText,
+    questionAction: MatchAction,
+    overrideOptions: Partial<QuestionOptions> = {}
+  ): void {
+    // Apply defaults to the options
+    const options: QuestionOptions = {
+      canDuplicate: false,
+      hardcoded: false,
+      ...overrideOptions, // Override defaults with any provided values
+    };
     const questionPromise = new Promise<void>((resolve, reject) => {
+      const formattedQuestionText = questionText.map(this.formateString);
       if (
         this.questions.some(
           (question) =>
-            question.text.sort().join() === questionText.sort().join()
+            question.text.sort().join() === formattedQuestionText.sort().join()
         )
       ) {
         reject(new Error("Question already exists for: " + questionText));
       } else {
-        this.questions.push({ text: questionText, action: questionAction, canDuplicate: canDuplicate, hardcoded: hardcoded });
+        this.questions.push({
+          text: formattedQuestionText,
+          action: questionAction,
+          options: options,
+        });
         resolve();
       }
     });
@@ -78,7 +99,7 @@ class SurveyAnswers implements SurveyAnswersContext {
     return this.questionSelectAction(document, this.questionSelector);
   }
 
-  getQuestionsFromDocument(document: Document): MatchedQuestion[] {
+  getQuestionsFromDocument(document: Document): [MatchedQuestion[], number] {
     const documentQuestions = this.getQuestions(document);
     const matchedQuestions: MatchedQuestion[] = [];
     documentQuestions.forEach((docQuestion, i) => {
@@ -88,8 +109,16 @@ class SurveyAnswers implements SurveyAnswersContext {
         matchedQuestions
       );
       if (question_i_match) matchedQuestions.push(question_i_match);
+      else if (DEBUG_MODE)
+        window.alert(
+          "Question not matched: " + this.formateString(docQuestion.innerText)
+        );
     });
-    return matchedQuestions;
+
+    return [
+      matchedQuestions,
+      documentQuestions.length - matchedQuestions.length,
+    ];
   }
 
   private getMatchedQuestion(
@@ -99,19 +128,26 @@ class SurveyAnswers implements SurveyAnswersContext {
   ): MatchedQuestion | null {
     const question_i_matches: MatchedQuestion[] = [];
 
+    const formattedDocumentQuestionI = this.formateString(
+      documentQuestionI.innerText
+    );
+
     for (let question of this.questions) {
       let found = true;
 
       // Check if all text parts of the question are included in the document's outerHTML
       for (let text of question.text)
-        found &&= documentQuestionI.outerHTML.includes(text);
+        found &&= formattedDocumentQuestionI.includes(text);
 
       if (found) question_i_matches.push({ ...question, i: i });
     }
 
     // Filter out questions that have already been matched
     const uniqueMatches = question_i_matches.filter(
-      (q) => !matchedQuestions.some((mq) => !mq.canDuplicate && mq.text === q.text)
+      (q) =>
+        !matchedQuestions.some(
+          (mq) => !mq.options.canDuplicate && mq.text === q.text
+        )
     );
 
     // return most relevant question (more matched text = higher relevance)
@@ -120,11 +156,16 @@ class SurveyAnswers implements SurveyAnswersContext {
     )[0];
   }
 
+  private formateString(str: string): string {
+    return str.replace(/\s{2,}/g, " ").toLowerCase();
+  }
+
   printQuestions(): void {
     let alertMessage = "";
     for (let question of this.questions) {
       alertMessage += question.text.join("\n") + "\n\n---\n";
     }
+
     window.alert("Survey Questions:\n" + alertMessage);
   }
 
