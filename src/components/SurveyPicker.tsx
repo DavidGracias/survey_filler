@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Collapse,
   Container,
@@ -15,11 +15,12 @@ import ComponentProps from "../types/ComponentProps";
 import GenericSurvey from "./GenericSurvey";
 
 import SurveyAnswers from "../types/SurveyAnswers";
-import PanelFox from "../surveyAnswers/PanelFox";
-import PRC from "../surveyAnswers/PRC";
-import RecruitAndField from "../surveyAnswers/RecruitAndField";
-import AdlerWeiner from "../surveyAnswers/AdlerWeiner";
-import FocusInsite from "../surveyAnswers/FocusInsite";
+import PanelFox from "../constants/PanelFox";
+import PRC from "../constants/PRC";
+import RecruitAndField from "../constants/RecruitAndField";
+import AdlerWeiner from "../constants/AdlerWeiner";
+import FocusInsite from "../constants/FocusInsite";
+import ContextBuilder from "../types/ContextBuilder";
 
 enum SurveyProviders {
   PRC,
@@ -86,8 +87,9 @@ export default function SurveyPicker({
       if (surveyAnswer !== undefined) {
         await surveyAnswer.waitForAllQuestions();
         setOpenSurveyProviderDropdown(false);
-        await triggerContextInjection(surveyAnswer, tabId);
+        await injectContext(surveyAnswer, tabId);
       }
+
       setSurveyAnswer(surveyAnswer);
     };
 
@@ -191,27 +193,24 @@ async function compareImages(
   if (similarPixels / totalPixels >= similarityThreshold) onMatch();
 }
 
-async function triggerContextInjection(surveyAnswer: SurveyAnswers, tabId: number) {
-  const { additionalContext, ...mainContext } = surveyAnswer.getContext();
+async function injectContext(surveyAnswer: SurveyAnswers, tabId: number) {
+  const injectionContext = ContextBuilder.getInjectionContext(surveyAnswer);
   
-  const injectContext = {
-    ...mainContext,
-    ...Object.fromEntries(
-      additionalContext.map((item) => [item.name, item])
-    ),
-  };
-
-  const injectCode = Object.entries(injectContext)
-      .map(([key, value]) => 
-        `globalThis.${key} = ${typeof value === 'string' ? JSON.stringify(value) : value};`
-      ).join("\n");
-
   await chrome.scripting.executeScript({
-    target: { tabId: tabId },
+    target: {
+      tabId: tabId,
+      allFrames: true,
+    },
     world: "MAIN",
     func: (code) => {
-      new Function(code)();
+      console.log(code);
+      new Function(code);
+      const script = document.createElement('script');
+      script.textContent = code;
+      (document.head || document.documentElement).appendChild(script);
     },
-    args: [injectCode]
+    args: [injectionContext],
   });
+  // wait for the script to be injected
+  await new Promise(resolve => setTimeout(resolve, 750));
 }

@@ -12,11 +12,11 @@ import {
   Divider,
 } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
-import { Information, People } from "./types/Information";
+import { Information } from "./types/Information";
 import SurveyPicker from "./components/SurveyPicker";
 import StarIcon from "@mui/icons-material/Star";
 import { Block, ExpandLess, ExpandMore } from "@mui/icons-material";
-
+import { People } from "./types/InformationEnums";
 const darkTheme = createTheme({
   palette: {
     mode: "dark",

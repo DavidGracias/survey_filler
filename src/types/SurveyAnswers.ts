@@ -1,5 +1,7 @@
 import { Information } from "./Information";
 import { DEBUG_MODE } from "../App";
+import DuplicateFunctionDefinitionError from "./errors/DuplicateFunctionDefinitionError";
+import MissingContextFunctionError from "./errors/MissingContextFunctionError";
 
 type MatchText = string[];
 type MatchAction = (
@@ -17,7 +19,7 @@ export type QuestionOptions = {
 
 type SurveyAnswersContext = {
   nextButtonAction: (selector: string | null) => void;
-  additionalContext: ((...args: any[]) => unknown)[];
+  additionalContext: (Function | object)[];
   nextButtonSelector: string | null;
   questionSelectAction: (
     document: Document,
@@ -60,6 +62,9 @@ class SurveyAnswers implements SurveyAnswersContext {
     };
 
     this.additionalContext = c.additionalContext;
+
+    // Validate & Error check constructor:
+    // DuplicateFunctionDefinitionError.validate(c.additionalContext);
   }
 
   addQuestion(
@@ -171,6 +176,10 @@ class SurveyAnswers implements SurveyAnswersContext {
 
   async waitForAllQuestions(): Promise<void> {
     await Promise.all(this.questionPromises);
+    MissingContextFunctionError.validate(
+      this.additionalContext,
+      this.questions.map((q) => ({ ...q, i: 0 }))
+    );
   }
 
   getContext(): SurveyAnswersContext {
@@ -183,4 +192,4 @@ class SurveyAnswers implements SurveyAnswersContext {
   }
 }
 
-export default SurveyAnswers;
+export default SurveyAnswers

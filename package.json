@@ -26,7 +26,8 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "build": "webpack --config webpack.config.js",
+    "build": "npm run generate-utils && npm run build-react",
+    "generate-utils": "ts-node scripts/generateUtilsIndex.ts",
     "build-react": "webpack --config webpack.config.js"
   },
   "eslintConfig": {

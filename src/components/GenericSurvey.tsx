@@ -1,4 +1,4 @@
-import { Button, Container, Divider, Typography } from "@mui/material";
+import { Alert, Button, Container, Divider, Typography } from "@mui/material";
 import { useEffect, useState, useMemo } from "react";
 import ComponentProps from "../types/ComponentProps";
 import { DEBUG_MODE } from "../App";
@@ -6,6 +6,7 @@ import SurveyAnswers, { MatchedQuestion } from "../types/SurveyAnswers";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
+import EditNoteIcon from "@mui/icons-material/EditNote";
 
 export default function GenericSurvey({
   url,
@@ -29,9 +30,12 @@ export default function GenericSurvey({
   }, []);
 
   useEffect(() => {
-    let [matchedQuestions, allQuestionsMatched] = surveyAnswer.getQuestionsFromDocument(document);
+    let [matchedQuestions, allQuestionsMatched] =
+      surveyAnswer.getQuestionsFromDocument(document);
     if (!information.hardcodedQuestionsEnabled) {
-      matchedQuestions = matchedQuestions.filter((question) => !question.options.hardcoded);
+      matchedQuestions = matchedQuestions.filter(
+        (question) => !question.options.hardcoded
+      );
     }
     setMatchedQuestions(matchedQuestions);
     setNumUnmatchedQuestions(allQuestionsMatched);
@@ -51,6 +55,12 @@ export default function GenericSurvey({
     // Create async function to handle sequential execution
     const answerQuestionsSequentially = async () => {
       for (const question of matchedQuestions) {
+        await chrome.scripting.executeScript({
+          target: { tabId: tabId },
+          world: "MAIN",
+          func: (action) => console.log(`Function: \`${action}\``),
+          args: [question.action.toString()],
+        });
         await chrome.scripting.executeScript({
           target: { tabId: tabId },
           world: "MAIN",
@@ -105,9 +115,31 @@ export default function GenericSurvey({
             </>
           )}
           {numUnmatchedQuestions && (
-            <Typography variant="h6">
-              {numUnmatchedQuestions} questions were not matched and need to be processed manually.
-            </Typography>
+            <>
+              <Alert
+                icon={<EditNoteIcon />}
+                variant="filled"
+                severity="warning"
+                sx={{ margin: "10px 5px" }}
+              >
+                <Typography
+                  component="span"
+                  color="textPrimary"
+                >
+                  <b>
+                    {numUnmatchedQuestions} question
+                    {numUnmatchedQuestions == 1 ? "" : "s"}
+                  </b>
+                </Typography>
+                <Typography component="span" color="textSecondary">
+                  {numUnmatchedQuestions == 1 ? " was " : " were "}
+                  not auto-filled,
+                  <b>{" complete "+ (numUnmatchedQuestions == 1 ? "it" : "them") +" manually "}</b>
+                  to continue!
+                </Typography>
+              </Alert>
+              <Divider />
+            </>
           )}
           <Typography variant="h6">
             Currently handling page associated with these questions:

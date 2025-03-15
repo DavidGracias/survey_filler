@@ -1,9 +1,12 @@
 import SurveyAnswers from "../types/SurveyAnswers";
 import { Information } from "../types/Information";
-import { chooseWeightedOption } from "./util/WeightedOptions";
-import { WeightedOption } from "./util/WeightedOptions";
-import { indexFromRanges } from "./util/IndexFromRange";
-import { setInputValue } from "./util/InputValues";
+import { EducationLevel } from "../types/InformationEnums";
+import {
+  chooseWeightedOption,
+  WeightedOption,
+  indexFromRanges,
+  setInputValue,
+} from "./util";
 
 const AdlerWeiner = new SurveyAnswers({
   nextButtonAction: () => {
@@ -17,12 +20,9 @@ const AdlerWeiner = new SurveyAnswers({
   },
   questionSelector: "div.question-container",
   additionalContext: [
-    WeightedOption,
-    chooseWeightedOption,
     selectOptionWithText,
-    indexFromRanges,
     pressLabelIfNotChecked,
-    setInputValue,
+    EducationLevel,
   ],
 });
 
@@ -77,10 +77,10 @@ AdlerWeiner.addQuestion(
       information.state,
       information.zipcode,
       information.email,
-      information.phone,
+      information.phone.number,
     ];
     for (let i = 0; i < inputs.length; i++) {
-      (inputs[i] as HTMLInputElement).value = answers[i];
+      setInputValue(inputs[i] as HTMLInputElement, answers[i]);
     }
   }
 );
@@ -109,10 +109,10 @@ AdlerWeiner.addQuestion(
       information.state,
       information.zipcode,
       information.email,
-      information.phone,
+      information.phone.number,
     ];
     for (let i = 0; i < inputs.length; i++) {
-      (inputs[i] as HTMLInputElement).value = answers[i];
+      setInputValue(inputs[i] as HTMLInputElement, answers[i]);
     }
   }
 );
@@ -153,20 +153,20 @@ AdlerWeiner.addQuestion(
         selectOptionWithText(element, ["West outside of CA"]);
         break;
       case "mw":
-        if (information.state == "illinois") {
+        if (information.state.toLowerCase() == "illinois") {
           selectOptionWithText(element, ["Illinois"]);
         } else {
           selectOptionWithText(element, ["Midwest outside of Illinois"]);
         }
         break;
-        case "s":
-          selectOptionWithText(element, ["South"]);
-          break;
-        case "ne":
-          selectOptionWithText(element, ["Northeast"]);
-          break;
-        default:
-          selectOptionWithText(element, ["East"]);
+      case "s":
+        selectOptionWithText(element, ["South"]);
+        break;
+      case "ne":
+        selectOptionWithText(element, ["Northeast"]);
+        break;
+      default:
+        selectOptionWithText(element, ["East"]);
     }
   }
 );
@@ -237,7 +237,8 @@ AdlerWeiner.addQuestion(
   ["What is your exact age?"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
-    element.querySelector("input")!.value = information.age.toString();
+
+    setInputValue(element.querySelector("input")!, information.age.toString());
   }
 );
 
@@ -249,10 +250,35 @@ AdlerWeiner.addQuestion(
 
     const answers = [
       information.age.toString(),
-      information.dob_mmddyyyy_slash
+      information.dob_mmddyyyy_slash,
     ];
     for (let i = 0; i < inputs.length; i++) {
       setInputValue(inputs[i] as HTMLInputElement, answers[i]);
+    }
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["What is your ethnicity"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    switch (information.race) {
+      case "white":
+        selectOptionWithText(element, ["caucasian"]);
+        break;
+      case "black":
+        selectOptionWithText(element, ["african", "american"]);
+        break;
+      case "asian":
+        selectOptionWithText(element, ["asian"]);
+        break;
+      case "hispanic":
+        selectOptionWithText(element, ["hispanic"]);
+        break;
+      default:
+        selectOptionWithText(element, ["other"]);
+        setInputValue(element.querySelector("input")!, information.race);
+        break;
     }
   }
 );
@@ -373,7 +399,8 @@ AdlerWeiner.addQuestion(
       const text = label.innerText.toLowerCase();
       if (text.includes("none of the above")) pressLabelIfNotChecked(label);
     }
-  }
+  },
+  { hardcoded: true }
 );
 
 AdlerWeiner.addQuestion(
@@ -434,7 +461,7 @@ AdlerWeiner.addQuestion(
     let status: string[] = [];
     switch (information.employment.status) {
       case "full time in person":
-        case "full time remote":
+      case "full time remote":
         status = ["full", "time"];
         break;
       case "part time":
@@ -522,6 +549,25 @@ AdlerWeiner.addQuestion(
 );
 
 AdlerWeiner.addQuestion(
+  ["children", "under", "18", "in", "household"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    const childrenUnder18 = information.household
+      .filter((housemate) => housemate.relationship === "child")
+      .filter((child) => child.age <= 18);
+    if (childrenUnder18.length > 0) {
+      selectOptionWithText(element, ["yes"]);
+      setInputValue(
+        element.querySelector("input")!,
+        childrenUnder18.map((child) => child.age).join(", ")
+      );
+    } else {
+      selectOptionWithText(element, ["no"]);
+    }
+  }
+);
+
+AdlerWeiner.addQuestion(
   ["Are you...", "single", "married"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
@@ -577,6 +623,92 @@ AdlerWeiner.addQuestion(
     });
   },
   { hardcoded: true }
+);
+
+AdlerWeiner.addQuestion(
+  [
+    "What is the name of the company you work at? The industry? Your job title?",
+  ],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
+    const labels = Array.from(element.querySelectorAll("label"));
+    labels.forEach((label) => {
+      const text = label.innerText.toLowerCase();
+
+      if (text.includes("name of company")) {
+        setInputValue(
+          label.nextSibling as HTMLInputElement,
+          information.employment.employer ?? "N/A"
+        );
+      } else if (text.includes("industry")) {
+        setInputValue(
+          label.nextSibling as HTMLInputElement,
+          information.employment.industry ?? "N/A"
+        );
+      } else if (text.includes("job title")) {
+        setInputValue(
+          label.nextSibling as HTMLInputElement,
+          information.employment.occupation ?? "N/A"
+        );
+      } else if (text.includes("student") && text.includes("major")) {
+        setInputValue(
+          label.nextSibling as HTMLInputElement,
+          information.education.major ?? "N/A"
+        );
+      }
+    });
+  }
+);
+
+AdlerWeiner.addQuestion(
+  [
+    "Would you consider your occupation to be",
+    "white",
+    "blue",
+    "pink",
+    "grey",
+    "collar",
+  ],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
+    const labels = Array.from(element.querySelectorAll("label"));
+    labels.forEach((label) => {
+      if (label.innerText.toLowerCase().includes(information.employment.collar))
+        pressLabelIfNotChecked(label);
+    });
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["highest", "education", "level", "complete"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
+    window.alert(
+      "triggered enum function with enum: " + JSON.stringify(EducationLevel)
+    );
+    switch (information.education.level) {
+      case EducationLevel.HighSchool:
+        selectOptionWithText(element, ["high school graduate"]);
+        break;
+      case EducationLevel.Associates:
+        selectOptionWithText(element, ["Some college"]);
+        break;
+      case EducationLevel.BachelorScience:
+      case EducationLevel.BachelorArts:
+        selectOptionWithText(element, ["College graduate"]);
+        break;
+      case EducationLevel.Masters:
+      case EducationLevel.Doctorate:
+        selectOptionWithText(element, ["Post graduate education"]);
+        break;
+      case EducationLevel.Other:
+        selectOptionWithText(element, ["some high school"]);
+        break;
+    }
+  }
 );
 
 export default AdlerWeiner;
