@@ -18,7 +18,9 @@ export default function GenericSurvey({
   const [matchedQuestions, setMatchedQuestions] = useState<MatchedQuestion[]>(
     []
   );
-  const [numUnmatchedQuestions, setNumUnmatchedQuestions] = useState<number>(0);
+  const [unmatchedQuestionIndices, setUnmatchedQuestionIndices] = useState<
+    number[]
+  >([]);
   const document = useMemo(
     () => new DOMParser().parseFromString(body, "text/html"),
     [body]
@@ -30,7 +32,7 @@ export default function GenericSurvey({
   }, []);
 
   useEffect(() => {
-    let [matchedQuestions, allQuestionsMatched] =
+    let [matchedQuestions, unmatchedQuestionIndices] =
       surveyAnswer.getQuestionsFromDocument(document);
     if (!information.hardcodedQuestionsEnabled) {
       matchedQuestions = matchedQuestions.filter(
@@ -38,7 +40,7 @@ export default function GenericSurvey({
       );
     }
     setMatchedQuestions(matchedQuestions);
-    setNumUnmatchedQuestions(allQuestionsMatched);
+    setUnmatchedQuestionIndices(unmatchedQuestionIndices);
   }, [document]);
 
   useEffect(() => {
@@ -58,12 +60,6 @@ export default function GenericSurvey({
         await chrome.scripting.executeScript({
           target: { tabId: tabId },
           world: "MAIN",
-          func: (action) => console.log(`Function: \`${action}\``),
-          args: [question.action.toString()],
-        });
-        await chrome.scripting.executeScript({
-          target: { tabId: tabId },
-          world: "MAIN",
           func: question.action,
           args: [information, surveyAnswer.questionSelector, question.i],
         });
@@ -76,15 +72,22 @@ export default function GenericSurvey({
         return; // don't auto-continue if in debug mode
       }
 
-      if (numUnmatchedQuestions == 0) {
+      if (!unmatchedQuestionIndices.length) {
         triggerNextButton(tabId, surveyAnswer);
       }
+
+      chrome.scripting.executeScript({
+        target: { tabId: tabId },
+        world: "MAIN",
+        func: markQuestionsAsUnmatched,
+        args: [surveyAnswer.questionSelector, unmatchedQuestionIndices],
+      });
     });
   }, [matchedQuestions]);
 
   return (
     <Container>
-      {!numUnmatchedQuestions && !matchedQuestions.length ? (
+      {!unmatchedQuestionIndices.length && !matchedQuestions.length ? (
         <>
           <Typography variant="h5">
             Unable to load / find questions related to the survey. Please try
@@ -114,7 +117,7 @@ export default function GenericSurvey({
               <Divider />
             </>
           )}
-          {numUnmatchedQuestions && (
+          {unmatchedQuestionIndices.length && (
             <>
               <Alert
                 icon={<EditNoteIcon />}
@@ -122,19 +125,20 @@ export default function GenericSurvey({
                 severity="warning"
                 sx={{ margin: "10px 5px" }}
               >
-                <Typography
-                  component="span"
-                  color="textPrimary"
-                >
+                <Typography component="span" color="textPrimary">
                   <b>
-                    {numUnmatchedQuestions} question
-                    {numUnmatchedQuestions == 1 ? "" : "s"}
+                    {unmatchedQuestionIndices.length} question
+                    {unmatchedQuestionIndices.length == 1 ? "" : "s"}
                   </b>
                 </Typography>
                 <Typography component="span" color="textSecondary">
-                  {numUnmatchedQuestions == 1 ? " was " : " were "}
+                  {unmatchedQuestionIndices.length == 1 ? " was " : " were "}
                   not auto-filled,
-                  <b>{" complete "+ (numUnmatchedQuestions == 1 ? "it" : "them") +" manually "}</b>
+                  <b>
+                    {" complete " +
+                      (unmatchedQuestionIndices.length == 1 ? "it" : "them") +
+                      " manually "}
+                  </b>
                   to continue!
                 </Typography>
               </Alert>
@@ -167,4 +171,36 @@ function triggerNextButton(tabId: number, surveyAnswer: SurveyAnswers) {
       }),
     250
   );
+}
+
+function markQuestionsAsUnmatched(
+  questionSelector: string,
+  questionIndices: number[]
+) {
+  // Inject CSS with animation
+  const classUnmatched = "unmatched";
+  if (!document.querySelector(`style[data-style="${classUnmatched}"]`)) {
+    const style = document.createElement("style");
+    style.setAttribute("data-style", classUnmatched);
+    style.textContent = `
+      .${classUnmatched} {
+        border: 3px groove #F07C4D !important;
+        padding: 5px;
+        animation: pulse 8s infinite !important;
+      }
+
+      @keyframes pulse {
+        0%, 100% { background: transparent; }
+        25%, 75% { background: rgba(240,172,77, .2) }
+        50% { background: #F0AC4D; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // Add/remove class to questions
+  document.querySelectorAll(questionSelector).forEach((question, i) => {
+    if (questionIndices.includes(i)) question.classList.add(classUnmatched);
+    else question.classList.remove(classUnmatched);
+  });
 }

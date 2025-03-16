@@ -104,9 +104,10 @@ class SurveyAnswers implements SurveyAnswersContext {
     return this.questionSelectAction(document, this.questionSelector);
   }
 
-  getQuestionsFromDocument(document: Document): [MatchedQuestion[], number] {
+  getQuestionsFromDocument(document: Document): [MatchedQuestion[], number[]] {
     const documentQuestions = this.getQuestions(document);
     const matchedQuestions: MatchedQuestion[] = [];
+    const unmatchedQuestionIndices: number[] = [];
     documentQuestions.forEach((docQuestion, i) => {
       const question_i_match = this.getMatchedQuestion(
         docQuestion,
@@ -114,16 +115,16 @@ class SurveyAnswers implements SurveyAnswersContext {
         matchedQuestions
       );
       if (question_i_match) matchedQuestions.push(question_i_match);
-      else if (DEBUG_MODE)
-        window.alert(
-          "Question not matched: " + this.formateString(docQuestion.innerText)
-        );
+      else {
+        unmatchedQuestionIndices.push(i);
+        if (DEBUG_MODE)
+          window.alert(
+            "Question not matched: " + this.formateString(docQuestion.innerText)
+          );
+      }
     });
 
-    return [
-      matchedQuestions,
-      documentQuestions.length - matchedQuestions.length,
-    ];
+    return [matchedQuestions, unmatchedQuestionIndices];
   }
 
   private getMatchedQuestion(
@@ -155,9 +156,9 @@ class SurveyAnswers implements SurveyAnswersContext {
         )
     );
 
-    // return most relevant question (more matched text = higher relevance)
+    // return most relevant question (shortest length matched text = higher relevance)
     return uniqueMatches.sort(
-      (a, b) => b.text.join("").length - a.text.join("").length
+      (a, b) => a.text.join("").length - b.text.join("").length
     )[0];
   }
 
@@ -192,4 +193,4 @@ class SurveyAnswers implements SurveyAnswersContext {
   }
 }
 
-export default SurveyAnswers
+export default SurveyAnswers;
