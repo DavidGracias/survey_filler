@@ -19,17 +19,18 @@ export type QuestionOptions = {
 
 type SurveyAnswersContext = {
   nextButtonAction: (selector: string | null) => void;
-  additionalContext: (Function | object)[];
+  additionalContext: (Function | NamedEnum)[];
   nextButtonSelector: string | null;
   questionSelectAction: (
     document: Document,
     selector: string | null
   ) => HTMLElement[];
 };
+export type NamedEnum = [string, object];
 type SurveyAnswersConstructor = {
   nextButtonAction: string | SurveyAnswersContext["nextButtonAction"];
   questionSelector: string;
-  additionalContext: SurveyAnswersContext["additionalContext"];
+  additionalContext: Function[];
 };
 
 class SurveyAnswers implements SurveyAnswersContext {

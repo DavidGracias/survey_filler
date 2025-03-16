@@ -22,18 +22,22 @@ const AdlerWeiner = new SurveyAnswers({
   additionalContext: [
     selectOptionWithText,
     pressLabelIfNotChecked,
-    EducationLevel,
   ],
 });
 
 function selectOptionWithText(questionElement: HTMLElement, needles: string[]) {
   needles = needles.map((n) => n.trim().toLowerCase());
-  questionElement.querySelectorAll("label").forEach((option_label) => {
+  const matchingLabels = Array.from(questionElement.querySelectorAll("label")).filter((option_label) => {
     const haystack = option_label.textContent!.trim().toLowerCase();
     var found = true;
     needles.forEach((needle) => (found &&= haystack.includes(needle)));
-    if (found) pressLabelIfNotChecked(option_label);
+    return found;
   });
+
+  if (matchingLabels.length > 0) {
+    matchingLabels.sort((a, b) => a.textContent!.trim().length - b.textContent!.trim().length);
+    pressLabelIfNotChecked(matchingLabels[0]);
+  }
 }
 
 function pressLabelIfNotChecked(label: HTMLLabelElement) {
@@ -686,9 +690,6 @@ AdlerWeiner.addQuestion(
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
 
-    window.alert(
-      "triggered enum function with enum: " + JSON.stringify(EducationLevel)
-    );
     switch (information.education.level) {
       case EducationLevel.HighSchool:
         selectOptionWithText(element, ["high school graduate"]);

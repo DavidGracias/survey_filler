@@ -20,7 +20,6 @@ import PRC from "../constants/PRC";
 import RecruitAndField from "../constants/RecruitAndField";
 import AdlerWeiner from "../constants/AdlerWeiner";
 import FocusInsite from "../constants/FocusInsite";
-import ContextBuilder from "../types/ContextBuilder";
 
 enum SurveyProviders {
   PRC,
@@ -87,7 +86,6 @@ export default function SurveyPicker({
       if (surveyAnswer !== undefined) {
         await surveyAnswer.waitForAllQuestions();
         setOpenSurveyProviderDropdown(false);
-        await injectContext(surveyAnswer, tabId);
       }
 
       setSurveyAnswer(surveyAnswer);
@@ -191,26 +189,4 @@ async function compareImages(
 
   const similarityThreshold = 0.7;
   if (similarPixels / totalPixels >= similarityThreshold) onMatch();
-}
-
-async function injectContext(surveyAnswer: SurveyAnswers, tabId: number) {
-  const injectionContext = ContextBuilder.getInjectionContext(surveyAnswer);
-  
-  await chrome.scripting.executeScript({
-    target: {
-      tabId: tabId,
-      allFrames: true,
-    },
-    world: "MAIN",
-    func: (code) => {
-      console.log(code);
-      new Function(code);
-      const script = document.createElement('script');
-      script.textContent = code;
-      (document.head || document.documentElement).appendChild(script);
-    },
-    args: [injectionContext],
-  });
-  // wait for the script to be injected
-  await new Promise(resolve => setTimeout(resolve, 750));
 }

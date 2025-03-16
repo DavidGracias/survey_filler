@@ -1,4 +1,4 @@
-import * as Utils from "../../constants/util/index";
+import ContextBuilder from "../ContextBuilder";
 import { MatchedQuestion } from "../SurveyAnswers";
 
 export default class MissingContextFunctionError extends Error {
@@ -13,36 +13,41 @@ export default class MissingContextFunctionError extends Error {
       missingFunctions.map((f) => `- ${f}`).join("\n"),
     ].join("\n");
   }
-  static validate(context: (Function | object)[], questions: MatchedQuestion[]): void {
+  static validate(
+    context: (Function | object)[],
+    questions: MatchedQuestion[]
+  ): void {
+    // Map to store minified enum name -> array of enum values
+    const enumUsages = new Map<string, Set<string>>();
+
+    questions.forEach((question) => {
+      const actionString = question.action.toString();
+      // Find all "case EnumName.Value:" patterns
+      const matches = actionString.matchAll(/case\s+(\w+)\.(\w+):/g);
+
+      for (const match of matches) {
+        const [_, minifiedEnumName, enumValue] = match;
+        if (!enumUsages.has(minifiedEnumName)) {
+          enumUsages.set(minifiedEnumName, new Set());
+        }
+        enumUsages.get(minifiedEnumName)!.add(enumValue);
+      }
+    });
+
+    // find which enum has all these values from InformationEnums
+    enumUsages.forEach((values, enumName) => {
+      const enumObj = ContextBuilder.globalEnums.find((item) =>
+        Array.from(values).every((value) =>
+          Object.prototype.hasOwnProperty.call(item?.[1], value)
+        )
+      );
+
+      // add the enum to the context
+      if (enumObj) {
+        context.push([enumName, enumObj?.[1]]);
+      }
+    });
+
     return;
-
-    // TODO: fix this function
-
-    // // find all functions being called in the questions
-    // const functionsInQuestions = questions.reduce((funcs, question) => {
-    //   const actionString = question.action.toString();
-    //   // Match function calls: functionName(...) or functionName.call(...) or functionName.apply(...)
-    //   const matches = actionString.match(/\b\w+(?=\s*[\(.])|(?<=\.)(call|apply)\b/g) || [];
-    //   matches.forEach(match => funcs.add(match));
-    //   return funcs;
-    // }, new Set<string>());
-
-    // // determine if these function names are present in the context
-    // const availableFunctions = new Set<string>([
-    //   // Functions from context
-    //   ...context.map(f => f.name),
-    //   // Browser APIs that are always available
-    //   'querySelector', 'querySelectorAll', 'click',
-    //   'setTimeout', 'setInterval', 'console'
-    // ]);
-
-    // // find which functions are missing
-    // const missingFunctions = Array.from(functionsInQuestions)
-    //   .filter(funcName => !availableFunctions.has(funcName));
-
-    // // if not, throw an error
-    // if (missingFunctions.length > 0) {
-    //   throw new MissingContextFunctionError(missingFunctions);
-    // }
   }
 }

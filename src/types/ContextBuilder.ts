@@ -1,6 +1,7 @@
 import * as InformationEnums from "../types/InformationEnums";
 import * as Utils from "../constants/util";
-import SurveyAnswers from "./SurveyAnswers";
+import SurveyAnswers, { NamedEnum } from "./SurveyAnswers";
+
 
 export default class ContextBuilder {
   private static readonly enumHelpers = `
@@ -14,23 +15,25 @@ function createEnum(obj) {
   return f;
 }`.trim();
 
-  private static enumDefinitions = Object.entries(InformationEnums)
-    .filter(([_, value]) => typeof value === "object")
-    .map(([name, enumObj]) => {
-      const entries = Object.entries(enumObj)
-        .filter(([key]) => isNaN(Number(key)))
-        .map(([key, value]) => [
-          `  ${key}: "${value}"`,
-          `  "${value}": "${key}"`,
-        ])
-        .flat()
-        .join(",\n");
+  private static createEnumDefinition([name, enumObj]: [string, object]) {
+    const entries = Object.entries(enumObj)
+      .filter(([key]) => isNaN(Number(key)))
+      .map(([key, value]) => [`  ${key}: "${value}"`, `  "${value}": "${key}"`])
+      .flat()
+      .join(",\n");
 
-      let minifiedName = enumObj.constructor.name;
-      if (minifiedName === "Object") minifiedName = name;
+    let minifiedName = enumObj.constructor.name;
+    if (minifiedName === "Object") minifiedName = name;
 
-      return `globalThis.${minifiedName} = createEnum({\n${entries}\n});`;
-    });
+    return `globalThis.${minifiedName} = createEnum({\n${entries}\n});`;
+  }
+
+  static globalEnums = Object.entries(InformationEnums).filter(
+    ([_, value]) => typeof value === "object"
+  );
+  private static enumDefinitions = ContextBuilder.globalEnums.map(
+    this.createEnumDefinition
+  );
 
   private static utilDefinitions = Object.entries(Utils)
     .filter(([_, value]) => typeof value === "function")
@@ -53,11 +56,23 @@ function createEnum(obj) {
         };`
     );
 
+    const contextEnums = additionalContext.filter(
+      (item): item is NamedEnum => Array.isArray(item) && item.length === 2 && typeof item[0] === 'string' && typeof item[1] === 'object'
+    );
+    const contextEnumsDefinitions = contextEnums
+      .map(([name, obj]) => {
+        return this.createEnumDefinition([
+          name,
+          obj,
+        ]);
+      });
+
     const sections: [string, string[]][] = [
       ["// Enum Helpers", [this.enumHelpers]],
       ["// Enum Definitions", this.enumDefinitions],
       ["// Utility Functions", this.utilDefinitions],
       ["// Context Variables", contextDefinitions],
+      ["// Context Enums", contextEnumsDefinitions],
     ];
 
     return sections

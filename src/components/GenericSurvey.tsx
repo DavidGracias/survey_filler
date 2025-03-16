@@ -7,6 +7,8 @@ import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import EditNoteIcon from "@mui/icons-material/EditNote";
+import ContextBuilder from "../types/ContextBuilder";
+
 
 export default function GenericSurvey({
   url,
@@ -56,6 +58,8 @@ export default function GenericSurvey({
 
     // Create async function to handle sequential execution
     const answerQuestionsSequentially = async () => {
+      await injectContext(surveyAnswer, tabId);
+      
       for (const question of matchedQuestions) {
         await chrome.scripting.executeScript({
           target: { tabId: tabId },
@@ -203,4 +207,26 @@ function markQuestionsAsUnmatched(
     if (questionIndices.includes(i)) question.classList.add(classUnmatched);
     else question.classList.remove(classUnmatched);
   });
+}
+
+async function injectContext(surveyAnswer: SurveyAnswers, tabId: number) {
+  const injectionContext = ContextBuilder.getInjectionContext(surveyAnswer);
+  
+  await chrome.scripting.executeScript({
+    target: {
+      tabId: tabId,
+      allFrames: true,
+    },
+    world: "MAIN",
+    func: (code) => {
+      console.log(code);
+      new Function(code);
+      const script = document.createElement('script');
+      script.textContent = code;
+      (document.head || document.documentElement).appendChild(script);
+    },
+    args: [injectionContext],
+  });
+  // wait for the script to be injected
+  await new Promise(resolve => setTimeout(resolve, 750));
 }
