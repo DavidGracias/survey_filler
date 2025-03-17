@@ -17,7 +17,7 @@ const RecruitAndField = new SurveyAnswers({
       if (button.innerText.includes("Next")) return button.click();
     }
   },
-  questionSelector: "form > div > div > div[role=listitem]",
+  questionSelector: "form > div > div > div[role=list] > div[role=listitem]",
   additionalContext: [selectOptionWithText, pressLabelIfNotChecked],
 });
 
@@ -36,6 +36,31 @@ function pressLabelIfNotChecked(label: HTMLElement) {
 }
 
 RecruitAndField.addQuestion(
+  ["PLEASE REVIEW TERMS BELOW BEFORE CONTINUING WITH THIS SURVEY"],
+  () => {},
+  { hardcoded: true }
+);
+RecruitAndField.addQuestion(["PRIVACY POLICY"], () => {}, { hardcoded: true });
+RecruitAndField.addQuestion(["NOTICE: PLEASE READ"], () => {}, {
+  hardcoded: true,
+});
+RecruitAndField.addQuestion(["USE OF AI"], () => {}, { hardcoded: true });
+RecruitAndField.addQuestion(
+  ["Click NEXT to find out more about this study"],
+  () => {},
+  { hardcoded: true }
+);
+RecruitAndField.addQuestion(
+  [
+    "If interested in this study, please answer the pre-qualifying questions as honestly as possible",
+    "There are no right or wrong answers",
+    "If you are a match, an Insights Coordinator will be in touch with you soon",
+  ],
+  () => {},
+  { hardcoded: true }
+);
+
+RecruitAndField.addQuestion(
   [
     "Notice",
     "Filling out this survey does NOT guarantee a spot on this study",
@@ -52,7 +77,7 @@ RecruitAndField.addQuestion(
 );
 
 RecruitAndField.addQuestion(
-  ["Do you acknowledge and agree to the terms stated above?"],
+  ["Do you acknowledge and agree to the terms stated above"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
 

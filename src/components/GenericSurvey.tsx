@@ -9,7 +9,6 @@ import ListItemText from "@mui/material/ListItemText";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import ContextBuilder from "../types/ContextBuilder";
 
-
 export default function GenericSurvey({
   url,
   body,
@@ -59,7 +58,7 @@ export default function GenericSurvey({
     // Create async function to handle sequential execution
     const answerQuestionsSequentially = async () => {
       await injectContext(surveyAnswer, tabId);
-      
+
       for (const question of matchedQuestions) {
         await chrome.scripting.executeScript({
           target: { tabId: tabId },
@@ -153,11 +152,16 @@ export default function GenericSurvey({
             Currently handling page associated with these questions:
           </Typography>
           <List>
-            {matchedQuestions.map((question) => (
-              <ListItem dense={true}>
-                <ListItemText primary={JSON.stringify(question.text)} />
-              </ListItem>
-            ))}
+            {matchedQuestions
+              .filter(
+                (question) =>
+                  question.action.toString() != (() => {}).toString()
+              )
+              .map((question) => (
+                <ListItem dense={true}>
+                  <ListItemText primary={JSON.stringify(question.text)} />
+                </ListItem>
+              ))}
           </List>
         </>
       )}
@@ -211,7 +215,6 @@ function markQuestionsAsUnmatched(
 
 async function injectContext(surveyAnswer: SurveyAnswers, tabId: number) {
   const injectionContext = ContextBuilder.getInjectionContext(surveyAnswer);
-  
   await chrome.scripting.executeScript({
     target: {
       tabId: tabId,
@@ -219,14 +222,28 @@ async function injectContext(surveyAnswer: SurveyAnswers, tabId: number) {
     },
     world: "MAIN",
     func: (code) => {
-      console.log(code);
-      new Function(code);
-      const script = document.createElement('script');
-      script.textContent = code;
-      (document.head || document.documentElement).appendChild(script);
+      try {
+        return new Function(code);
+      } catch (e) {
+        console.log("Failed to inject via `new Function(code)` with error:", e);
+      }
+      try {
+        const trustingPolicy = window.trustedTypes!.createPolicy("trust", {
+          createScript: (script: string) => script,
+        });
+
+        const scriptElement = document.createElement("script");
+        const trustedScript = trustingPolicy.createScript(code);
+        // @ts-ignore
+        scriptElement.textContent = trustedScript;
+        document.head.appendChild(scriptElement);
+        scriptElement.remove();
+      } catch (e) {
+        console.log("Failed to inject via `trustedTypes` with error:", e);
+      }
     },
     args: [injectionContext],
   });
-  // wait for the script to be injected
-  await new Promise(resolve => setTimeout(resolve, 750));
+
+  await new Promise((resolve) => setTimeout(resolve, 750));
 }

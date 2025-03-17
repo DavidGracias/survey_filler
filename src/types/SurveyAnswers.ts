@@ -80,7 +80,7 @@ class SurveyAnswers implements SurveyAnswersContext {
       ...overrideOptions, // Override defaults with any provided values
     };
     const questionPromise = new Promise<void>((resolve, reject) => {
-      const formattedQuestionText = questionText.map(this.formateString);
+      const formattedQuestionText = questionText.map(this.formatString);
       if (
         this.questions.some(
           (question) =>
@@ -120,7 +120,7 @@ class SurveyAnswers implements SurveyAnswersContext {
         unmatchedQuestionIndices.push(i);
         if (DEBUG_MODE)
           window.alert(
-            "Question not matched: " + this.formateString(docQuestion.innerText)
+            "Question not matched: " + this.formatString(docQuestion.innerText)
           );
       }
     });
@@ -135,19 +135,42 @@ class SurveyAnswers implements SurveyAnswersContext {
   ): MatchedQuestion | null {
     const question_i_matches: MatchedQuestion[] = [];
 
-    const formattedDocumentQuestionI = this.formateString(
+    const formattedDocumentQuestionI = this.formatString(
       documentQuestionI.innerText
     );
 
-    for (let question of this.questions) {
-      let found = true;
+    function needlesFoundInHaystack(
+      haystack: string,
+      needles: string[]
+    ): boolean {
+      // Base case: if no more needles to find, we've found them all
+      if (needles.length === 0) return true;
 
-      // Check if all text parts of the question are included in the document's outerHTML
-      for (let text of question.text)
-        found &&= formattedDocumentQuestionI.includes(text);
+      function getAllIndexes(haystack: string, needle: string): number[] {
+        const indexes: number[] = [];
+        let index = haystack.indexOf(needle);
 
-      if (found) question_i_matches.push({ ...question, i: i });
+        while (index !== -1) {
+          const isWordStart = !(index === 0 ? "" : haystack[index - 1]).match(/[a-z]/i);
+          if (isWordStart) indexes.push(index);
+          index = haystack.indexOf(needle, index + 1);
+        }
+        return indexes;
+      }
+
+      for (const index of getAllIndexes(haystack, needles[0])) {
+        const remainingHaystack =
+          haystack.substring(0, index) +
+          haystack.substring(index + needles[0].length);
+        if (needlesFoundInHaystack(remainingHaystack, needles.slice(1)))
+          return true;
+      }
+      return false;
     }
+
+    for (let question of this.questions)
+      if (needlesFoundInHaystack(formattedDocumentQuestionI, question.text))
+        question_i_matches.push({ ...question, i: i });
 
     // Filter out questions that have already been matched
     const uniqueMatches = question_i_matches.filter(
@@ -163,8 +186,15 @@ class SurveyAnswers implements SurveyAnswersContext {
     )[0];
   }
 
-  private formateString(str: string): string {
-    return str.replace(/\s{2,}/g, " ").toLowerCase();
+  private formatString(str: string): string {
+    return str
+      .replace(/\s{2,}/g, " ")
+      .replace(/[^\w\s]/g, "")
+      .toLowerCase()
+      .trim()
+      .split(" ")
+      .filter((word) => word.length > 0)
+      .join(" ");
   }
 
   printQuestions(): void {
