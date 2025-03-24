@@ -29,7 +29,7 @@ export default function GenericSurvey({
 
   useEffect(() => {
     if (!DEBUG_MODE) return;
-    surveyAnswer.printQuestions();
+    // surveyAnswer.printQuestions();
   }, []);
 
   useEffect(() => {
@@ -45,15 +45,7 @@ export default function GenericSurvey({
   }, [document]);
 
   useEffect(() => {
-    if (!matchedQuestions.length) return;
-    if (DEBUG_MODE) {
-      window.alert(
-        "matchedQuestions (# of items = " +
-          matchedQuestions.length +
-          "): \n" +
-          JSON.stringify(matchedQuestions)
-      );
-    }
+    if (!matchedQuestions.length && !unmatchedQuestionIndices.length) return;
 
     // Create async function to handle sequential execution
     const answerQuestionsSequentially = async () => {
@@ -70,14 +62,30 @@ export default function GenericSurvey({
     };
 
     answerQuestionsSequentially().then(() => {
-      if (DEBUG_MODE) {
-        window.alert("DEBUG_MODE is enabled, skipping pressNextButton()");
-        return; // don't auto-continue if in debug mode
-      }
+      chrome.scripting.executeScript({
+        target: { tabId: tabId },
+        world: "MAIN",
+        func: (injectedContext: string) => {
+          // Parse the context string to find globalThis assignments
+          const globalThisAssignments = injectedContext
+            .split("\n")
+            .filter((line) => line.trim().startsWith("globalThis."))
+            .map((line) => line.trim().split(".")[1]?.split(" ")[0])
+            .filter(Boolean);
 
-      if (!unmatchedQuestionIndices.length) {
-        triggerNextButton(tabId, surveyAnswer);
-      }
+          // Log all found globalThis values
+          console.log(
+            "Injected globalThis values:",
+            globalThisAssignments.reduce((acc, key) => {
+              if (key in globalThis) {
+                acc[key] = (globalThis as any)[key];
+              }
+              return acc;
+            }, {} as Record<string, any>)
+          );
+        },
+        args: [ContextBuilder.getInjectionContext(surveyAnswer)],
+      });
 
       chrome.scripting.executeScript({
         target: { tabId: tabId },
@@ -85,8 +93,12 @@ export default function GenericSurvey({
         func: markQuestionsAsUnmatched,
         args: [surveyAnswer.questionSelector, unmatchedQuestionIndices],
       });
+
+      if (!unmatchedQuestionIndices.length) {
+        triggerNextButton(tabId, surveyAnswer);
+      }
     });
-  }, [matchedQuestions]);
+  }, [matchedQuestions, unmatchedQuestionIndices]);
 
   return (
     <Container>
@@ -155,11 +167,17 @@ export default function GenericSurvey({
             {matchedQuestions
               .filter(
                 (question) =>
+                  DEBUG_MODE ||
                   question.action.toString() != (() => {}).toString()
               )
               .map((question) => (
                 <ListItem dense={true}>
-                  <ListItemText primary={JSON.stringify(question.text)} />
+                  <ListItemText
+                    primary={
+                      (DEBUG_MODE ? question.i + ": " : "") +
+                      JSON.stringify(question.text)
+                    }
+                  />
                 </ListItem>
               ))}
           </List>
@@ -196,6 +214,10 @@ function markQuestionsAsUnmatched(
         padding: 5px;
         animation: pulse 8s infinite !important;
       }
+        
+      .${classUnmatched} * {
+        background: transparent !important;
+      }
 
       @keyframes pulse {
         0%, 100% { background: transparent; }
@@ -207,7 +229,7 @@ function markQuestionsAsUnmatched(
   }
 
   // Add/remove class to questions
-  document.querySelectorAll(questionSelector).forEach((question, i) => {
+  document.querySelectorAll(questionSelector).forEach((question, i: number) => {
     if (questionIndices.includes(i)) question.classList.add(classUnmatched);
     else question.classList.remove(classUnmatched);
   });
@@ -222,22 +244,29 @@ async function injectContext(surveyAnswer: SurveyAnswers, tabId: number) {
     },
     world: "MAIN",
     func: (code) => {
+      console.clear();
+      console.log("injected context:\n\n", code);
       try {
         return new Function(code);
       } catch (e) {
         console.log("Failed to inject via `new Function(code)` with error:", e);
       }
       try {
-        const trustingPolicy = window.trustedTypes!.createPolicy("trust", {
-          createScript: (script: string) => script,
-        });
+        let scriptElement = document.querySelector(
+          'script[data-injected-context="true"]'
+        );
+        if (!scriptElement) {
+          scriptElement = document.createElement("script");
+          scriptElement.setAttribute("data-injected-context", "true");
+          document.head.appendChild(scriptElement);
+        }
 
-        const scriptElement = document.createElement("script");
-        const trustedScript = trustingPolicy.createScript(code);
         // @ts-ignore
-        scriptElement.textContent = trustedScript;
-        document.head.appendChild(scriptElement);
-        scriptElement.remove();
+        scriptElement.textContent = window
+          .trustedTypes!.createPolicy("InjectedContextPolicy", {
+            createScript: (script: string) => script,
+          })
+          .createScript(code);
       } catch (e) {
         console.log("Failed to inject via `trustedTypes` with error:", e);
       }

@@ -15,7 +15,7 @@ export function WeightedOption<T>(
 }
 export function chooseWeightedOption<T>(
   weightedOptions: WeightedOption<T>[]
-): T | null {
+): T {
   const totalWeight = weightedOptions.reduce(
     (acc, option) => acc + option.weight,
     0
@@ -33,5 +33,5 @@ export function chooseWeightedOption<T>(
     if (randomValue <= 0) return option.options;
   }
 
-  return null;
+  throw new Error("No option was chosen");
 }

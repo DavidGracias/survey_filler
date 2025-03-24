@@ -19,23 +19,25 @@ const AdlerWeiner = new SurveyAnswers({
     button?.click();
   },
   questionSelector: "div.question-container",
-  additionalContext: [
-    selectOptionWithText,
-    pressLabelIfNotChecked,
-  ],
+  additionalContext: [selectOptionWithText, pressLabelIfNotChecked],
 });
 
 function selectOptionWithText(questionElement: HTMLElement, needles: string[]) {
   needles = needles.map((n) => n.trim().toLowerCase());
-  const matchingLabels = Array.from(questionElement.querySelectorAll("label")).filter((option_label) => {
-    const haystack = option_label.textContent!.trim().toLowerCase();
+  const matchingLabels = Array.from(
+    questionElement.querySelectorAll("label")
+  ).filter((option_label) => {
+    const haystack = option_label.textContent?.trim().toLowerCase();
+    if (!haystack) return false;
     var found = true;
     needles.forEach((needle) => (found &&= haystack.includes(needle)));
     return found;
   });
 
   if (matchingLabels.length > 0) {
-    matchingLabels.sort((a, b) => a.textContent!.trim().length - b.textContent!.trim().length);
+    matchingLabels.sort(
+      (a, b) => a.textContent!.trim().length - b.textContent!.trim().length
+    );
     pressLabelIfNotChecked(matchingLabels[0]);
   }
 }
@@ -83,7 +85,7 @@ AdlerWeiner.addQuestion(
       information.email,
       information.phone.number,
     ];
-    for (let i = 0; i < inputs.length; i++) {
+    for (let i = 0; i < answers.length; i++) {
       setInputValue(inputs[i] as HTMLInputElement, answers[i]);
     }
   }
@@ -115,7 +117,7 @@ AdlerWeiner.addQuestion(
       information.email,
       information.phone.number,
     ];
-    for (let i = 0; i < inputs.length; i++) {
+    for (let i = 0; i < answers.length; i++) {
       setInputValue(inputs[i] as HTMLInputElement, answers[i]);
     }
   }
@@ -242,7 +244,7 @@ AdlerWeiner.addQuestion(
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
 
-    setInputValue(element.querySelector("input")!, information.age.toString());
+    setInputValue(element.querySelector("input"), information.age.toString());
   }
 );
 
@@ -256,7 +258,7 @@ AdlerWeiner.addQuestion(
       information.age.toString(),
       information.dob_mmddyyyy_slash,
     ];
-    for (let i = 0; i < inputs.length; i++) {
+    for (let i = 0; i < answers.length; i++) {
       setInputValue(inputs[i] as HTMLInputElement, answers[i]);
     }
   }
@@ -281,7 +283,7 @@ AdlerWeiner.addQuestion(
         break;
       default:
         selectOptionWithText(element, ["other"]);
-        setInputValue(element.querySelector("input")!, information.race);
+        setInputValue(element.querySelector("input"), information.race);
         break;
     }
   }
@@ -310,7 +312,7 @@ AdlerWeiner.addQuestion(
       case "other":
         selectOptionWithText(element, ["other"]);
 
-        setInputValue(element.querySelector("input")!, information.race);
+        setInputValue(element.querySelector("input"), information.race);
         break;
     }
   }
@@ -338,7 +340,7 @@ AdlerWeiner.addQuestion(
       case "mixed race":
       case "other":
         selectOptionWithText(element, ["other"]);
-        setInputValue(element.querySelector("input")!, information.race);
+        setInputValue(element.querySelector("input"), information.race);
         break;
     }
   }
@@ -374,7 +376,7 @@ AdlerWeiner.addQuestion(
     weightedOptions.push(WeightedOption("Cannabis Consumption", 1));
     const option = chooseWeightedOption(weightedOptions);
 
-    setInputValue(element.querySelector("input")!, option!);
+    setInputValue(element.querySelector("input"), option);
   },
   { hardcoded: true }
 );
@@ -562,7 +564,7 @@ AdlerWeiner.addQuestion(
     if (childrenUnder18.length > 0) {
       selectOptionWithText(element, ["yes"]);
       setInputValue(
-        element.querySelector("input")!,
+        element.querySelector("input"),
         childrenUnder18.map((child) => child.age).join(", ")
       );
     } else {
@@ -609,7 +611,7 @@ AdlerWeiner.addQuestion(
     if (childrenUnder18.length > 0) {
       selectOptionWithText(element, ["yes"]);
       setInputValue(
-        element.querySelector("input")!,
+        element.querySelector("input"),
         childrenUnder18.map((child) => child.age).join(", ")
       );
     } else {
@@ -639,27 +641,16 @@ AdlerWeiner.addQuestion(
     const labels = Array.from(element.querySelectorAll("label"));
     labels.forEach((label) => {
       const text = label.innerText.toLowerCase();
+      const next = label.nextSibling as HTMLInputElement | null;
 
       if (text.includes("name of company")) {
-        setInputValue(
-          label.nextSibling as HTMLInputElement,
-          information.employment.employer ?? "N/A"
-        );
+        setInputValue(next, information.employment.employer ?? "N/A");
       } else if (text.includes("industry")) {
-        setInputValue(
-          label.nextSibling as HTMLInputElement,
-          information.employment.industry ?? "N/A"
-        );
+        setInputValue(next, information.employment.industry ?? "N/A");
       } else if (text.includes("job title")) {
-        setInputValue(
-          label.nextSibling as HTMLInputElement,
-          information.employment.occupation ?? "N/A"
-        );
+        setInputValue(next, information.employment.occupation ?? "N/A");
       } else if (text.includes("student") && text.includes("major")) {
-        setInputValue(
-          label.nextSibling as HTMLInputElement,
-          information.education.major ?? "N/A"
-        );
+        setInputValue(next, information.education.major ?? "N/A");
       }
     });
   }

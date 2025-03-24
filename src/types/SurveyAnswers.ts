@@ -151,10 +151,11 @@ class SurveyAnswers implements SurveyAnswersContext {
         let index = haystack.indexOf(needle);
 
         while (index !== -1) {
-          const isWordStart = !(index === 0 ? "" : haystack[index - 1]).match(/[a-z]/i);
+          const isWordStart = index === 0 || !/[a-z]/.test(haystack[index - 1]);
           if (isWordStart) indexes.push(index);
           index = haystack.indexOf(needle, index + 1);
         }
+
         return indexes;
       }
 
@@ -168,33 +169,28 @@ class SurveyAnswers implements SurveyAnswersContext {
       return false;
     }
 
-    for (let question of this.questions)
-      if (needlesFoundInHaystack(formattedDocumentQuestionI, question.text))
-        question_i_matches.push({ ...question, i: i });
-
-    // Filter out questions that have already been matched
-    const uniqueMatches = question_i_matches.filter(
+    const unmatchedQuestions = this.questions.filter(
       (q) =>
         !matchedQuestions.some(
           (mq) => !mq.options.canDuplicate && mq.text === q.text
         )
     );
+    for (let question of unmatchedQuestions)
+      if (needlesFoundInHaystack(formattedDocumentQuestionI, question.text))
+        question_i_matches.push({ ...question, i: i });
 
-    // return most relevant question (shortest length matched text = higher relevance)
-    return uniqueMatches.sort(
-      (a, b) => a.text.join("").length - b.text.join("").length
+    // return most relevant question (longest length matched text = higher relevance)
+    return question_i_matches.sort(
+      (a, b) => b.text.join("").length - a.text.join("").length
     )[0];
   }
 
   private formatString(str: string): string {
     return str
+      .replace(/([^a-zA-Z0-9])/g, " ")
       .replace(/\s{2,}/g, " ")
-      .replace(/[^\w\s]/g, "")
       .toLowerCase()
-      .trim()
-      .split(" ")
-      .filter((word) => word.length > 0)
-      .join(" ");
+      .trim();
   }
 
   printQuestions(): void {

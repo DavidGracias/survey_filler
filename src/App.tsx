@@ -53,7 +53,7 @@ export default function App() {
       })
       .then((results) => {
         setBody(results[0].result!);
-        if (DEBUG_MODE && body != results[0].result!) alert(`Body Changed!`);
+        // if (DEBUG_MODE && body != results[0].result!) alert(`Body Changed!`);
       });
     setUrl(tab.url!);
     setTabId(tab.id!);

@@ -7,14 +7,15 @@ import {
   MaritalStatus,
   Race,
 } from "../types/InformationEnums";
-import { capitalize, indexFromRanges, setInputValue } from "./util";
+import { capitalize, indexFromRanges, setInputValue, WeightedOption, chooseWeightedOption } from "./util";
 
 const RecruitAndField = new SurveyAnswers({
   nextButtonAction: function nextButtonClick() {
     const buttons: NodeListOf<HTMLElement> =
       document.querySelectorAll("div[role='button']");
     for (const button of buttons) {
-      if (button.innerText.includes("Next")) return button.click();
+      const buttonText = button.innerText.trim().toLowerCase();
+      if (buttonText.includes("next") || buttonText.includes("submit")) return button.click();
     }
   },
   questionSelector: "form > div > div > div[role=list] > div[role=listitem]",
@@ -24,7 +25,8 @@ const RecruitAndField = new SurveyAnswers({
 function selectOptionWithText(questionElement: HTMLElement, needles: string[]) {
   needles = needles.map((n) => n.trim().toLowerCase());
   questionElement.querySelectorAll("label").forEach((option_label) => {
-    const haystack = option_label.textContent!.trim().toLowerCase();
+    const haystack = option_label.textContent?.trim().toLowerCase();
+    if (!haystack) return;
     var found = true;
     needles.forEach((needle) => (found &&= haystack.includes(needle)));
     if (found) pressLabelIfNotChecked(option_label);
@@ -34,6 +36,8 @@ function selectOptionWithText(questionElement: HTMLElement, needles: string[]) {
 function pressLabelIfNotChecked(label: HTMLElement) {
   label.click();
 }
+
+RecruitAndField.addQuestion(["WHO WE ARE"], () => {}, { hardcoded: true });
 
 RecruitAndField.addQuestion(
   ["PLEASE REVIEW TERMS BELOW BEFORE CONTINUING WITH THIS SURVEY"],
@@ -52,9 +56,8 @@ RecruitAndField.addQuestion(
 );
 RecruitAndField.addQuestion(
   [
-    "If interested in this study, please answer the pre-qualifying questions as honestly as possible",
-    "There are no right or wrong answers",
-    "If you are a match, an Insights Coordinator will be in touch with you soon",
+    "If interested in this study, please answer the pre-qualifying questions as honestly as possible. There are no right or wrong answers.",
+    "If you are a match, an Insights Coordinator will be in touch with you soon.",
   ],
   () => {},
   { hardcoded: true }
@@ -63,21 +66,26 @@ RecruitAndField.addQuestion(
 RecruitAndField.addQuestion(
   [
     "Notice",
-    "Filling out this survey does NOT guarantee a spot on this study",
-    "You will NOT be compensated for filling this survey out",
+    "Filling out this survey does",
+    "NOT",
+    "guarantee a spot on this study",
+    "You will",
+    "NOT",
+    "be compensated for filling this survey out",
     "Only participants who participate in our studies are compensated",
   ],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
 
-    const label = element.querySelector("label")!;
-    if (label.getAttribute("aria-checked") === "false") label.click();
+    const label: HTMLElement | null =
+      element.querySelector("[role='checkbox']");
+    if (label && label.getAttribute("aria-checked") === "false") label.click();
   },
   { hardcoded: true }
 );
 
 RecruitAndField.addQuestion(
-  ["Do you acknowledge and agree to the terms stated above"],
+  ["Do you acknowledge and agree to the terms", "stated above"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
 
@@ -85,13 +93,22 @@ RecruitAndField.addQuestion(
   },
   { hardcoded: true }
 );
+RecruitAndField.addQuestion(["Study Information"], () => {}, {
+  hardcoded: true,
+});
+RecruitAndField.addQuestion(["Continue to take the survey"], () => {}, {
+  hardcoded: true,
+});
 
+RecruitAndField.addQuestion(["Contact Information"], () => {}, {
+  hardcoded: true,
+});
 RecruitAndField.addQuestion(
   ["First Name"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
 
-    setInputValue(element.querySelector("input")!, information.firstName);
+    setInputValue(element.querySelector("input"), information.firstName);
   }
 );
 
@@ -100,16 +117,21 @@ RecruitAndField.addQuestion(
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
 
-    setInputValue(element.querySelector("input")!, information.lastName);
+    setInputValue(element.querySelector("input"), information.lastName);
   }
 );
 
+RecruitAndField.addQuestion(
+  ["Please enter your prefered contact info below"],
+  () => {},
+  { hardcoded: true }
+);
 RecruitAndField.addQuestion(
   ["Email address"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
 
-    setInputValue(element.querySelector("input")!, information.email);
+    setInputValue(element.querySelector("input"), information.email);
   }
 );
 
@@ -118,7 +140,7 @@ RecruitAndField.addQuestion(
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
 
-    setInputValue(element.querySelector("input")!, information.phone.number);
+    setInputValue(element.querySelector("input"), information.phone.number);
   }
 );
 
@@ -128,32 +150,47 @@ RecruitAndField.addQuestion(
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
 
     setInputValue(
-      element.querySelector("input")!,
+      element.querySelector("textarea"),
       `${information.phone.make} ${information.phone.model}`
     );
   }
 );
 
 RecruitAndField.addQuestion(
+  ["Please enter the following info for your", "current residence"],
+  () => {},
+  { hardcoded: true }
+);
+RecruitAndField.addQuestion(
   ["State"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
-    // TODO: click only if not yet open
-
-    // (element.querySelector("[role=option]")! as HTMLElement).click();
 
     const state = capitalize(information.state);
 
-    // setTimeout(async () => {
-    //   let listbox_options: NodeListOf<HTMLElement>;
-    //   do {
-    //     listbox_options = document.querySelectorAll(
-    //       `div[data-value='${state}']`
-    //     );
-    //     await new Promise((resolve) => setTimeout(resolve, 1e2));
-    //   } while (listbox_options.length <= 1);
-    //   listbox_options[1].click();
-    // }, 1e2);
+    if (
+      element.querySelector("[role='option']")?.getAttribute("data-value") ===
+      state
+    )
+      return;
+
+    const stateDropdown: HTMLElement | null = element.querySelector(
+      "[role='presentation']"
+    );
+    if (stateDropdown != null && !stateDropdown.getAttribute("aria-hidden"))
+      stateDropdown.click();
+
+    setTimeout(async () => {
+      let listbox_options: NodeListOf<HTMLElement>;
+      do {
+        listbox_options = document.querySelectorAll(
+          `div[data-value='${state}']`
+        );
+        await new Promise((resolve) => setTimeout(resolve, 1e2));
+      } while (listbox_options.length <= 1);
+
+      listbox_options[1].click();
+    }, 1e2);
   }
 );
 
@@ -162,7 +199,7 @@ RecruitAndField.addQuestion(
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
 
-    setInputValue(element.querySelector("input")!, information.city);
+    setInputValue(element.querySelector("input"), information.city);
   }
 );
 
@@ -171,10 +208,11 @@ RecruitAndField.addQuestion(
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
 
-    setInputValue(element.querySelector("input")!, information.zipcode);
+    setInputValue(element.querySelector("input"), information.zipcode);
   }
 );
 
+RecruitAndField.addQuestion(["Demographics"], () => {}, { hardcoded: true });
 RecruitAndField.addQuestion(
   ["Gender"],
   (information: Information, selector: string, i: number) => {
@@ -202,9 +240,11 @@ RecruitAndField.addQuestion(
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
 
-    setInputValue(element.querySelector("input")!, information.age.toString());
+    setInputValue(element.querySelector("input"), information.age.toString());
   }
 );
+
+
 
 RecruitAndField.addQuestion(
   ["race", "ethnic", "background"],
@@ -239,7 +279,7 @@ RecruitAndField.addQuestion(
         break;
       default:
         text = ["other"];
-        setInputValue(element.querySelector("input")!, information.race);
+        setInputValue(element.querySelector("input"), information.race);
     }
     selectOptionWithText(element, text);
   }
@@ -274,7 +314,7 @@ RecruitAndField.addQuestion(
       default:
         text = ["other"];
         setInputValue(
-          element.querySelector("input")!,
+          element.querySelector("input"),
           information.maritalStatus
         );
     }
@@ -314,7 +354,7 @@ RecruitAndField.addQuestion(
       default:
         text = ["other"];
         setInputValue(
-          element.querySelector("input")!,
+          element.querySelector("input"),
           information.employment.status
         );
     }
@@ -328,7 +368,7 @@ RecruitAndField.addQuestion(
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
 
     setInputValue(
-      element.querySelector("input")!,
+      element.querySelector("input"),
       information.employment.occupation ?? "N/A"
     );
   }
@@ -340,7 +380,7 @@ RecruitAndField.addQuestion(
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
 
     setInputValue(
-      element.querySelector("input")!,
+      element.querySelector("input"),
       information.employment.industry ?? "N/A"
     );
   }
@@ -352,7 +392,7 @@ RecruitAndField.addQuestion(
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
 
     setInputValue(
-      element.querySelector("input")!,
+      element.querySelector("input"),
       information.employment.employer ?? "N/A"
     );
   }
@@ -382,7 +422,7 @@ RecruitAndField.addQuestion(
       default:
         text = ["other"];
         setInputValue(
-          element.querySelector("input")!,
+          element.querySelector("input"),
           information.education.level
         );
     }
@@ -400,27 +440,50 @@ RecruitAndField.addQuestion(
     if (index != -1) pressLabelIfNotChecked(options[index]);
 
     setInputValue(
-      element.querySelector("input")!,
+      element.querySelector("input"),
       information.employment.employer ?? "N/A"
     );
   }
 );
 
-// RecruitAndField.addPage(
-//   [
-//     "Which country were you born in?",
-//     "How long have you lived in the USA?",
-//   ],
-//   (information: Information) => {
-//     const answers = [
-//       "United States",
-//       information.age.toString(),
-//     ];
-//     document.querySelectorAll("input[type='text']").forEach((input, i) => {
-//       (input as HTMLInputElement).value = answers[i];
-//       (input as HTMLInputElement).dispatchEvent(new Event("input", { bubbles: true }));
-//     });
-//   }
-// );
+RecruitAndField.addQuestion(
+  ["We're almost done!"],
+  () => {},
+  { hardcoded: true }
+);
+RecruitAndField.addQuestion(
+  ["Where did you find out about this survey"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    
+    const weightedOptions: WeightedOption<string[]>[] = [];
+
+    for (const label of element.querySelectorAll("label")) {
+      if (label.textContent?.includes("other") || !label.textContent) continue;
+      weightedOptions.push(WeightedOption([label.textContent], 1));
+    }
+
+    const option = chooseWeightedOption(weightedOptions);
+    if (option) selectOptionWithText(element, option);
+  },
+  { hardcoded: true }
+);
+
+RecruitAndField.addQuestion(
+  ["Please note"],
+  () => {},
+  { hardcoded: true }
+);
+RecruitAndField.addQuestion(
+  ["Do you wish to be contacted for future studies?"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    selectOptionWithText(element, ["yes"]);
+  },
+  { hardcoded: true }
+);
+
+
+
 
 export default RecruitAndField;
