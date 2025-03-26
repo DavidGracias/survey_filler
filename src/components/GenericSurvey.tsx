@@ -51,6 +51,7 @@ export default function GenericSurvey({
     const answerQuestionsSequentially = async () => {
       await injectContext(surveyAnswer, tabId);
 
+      // Then proceed with questions
       for (const question of matchedQuestions) {
         await chrome.scripting.executeScript({
           target: { tabId: tabId },
@@ -62,31 +63,6 @@ export default function GenericSurvey({
     };
 
     answerQuestionsSequentially().then(() => {
-      chrome.scripting.executeScript({
-        target: { tabId: tabId },
-        world: "MAIN",
-        func: (injectedContext: string) => {
-          // Parse the context string to find globalThis assignments
-          const globalThisAssignments = injectedContext
-            .split("\n")
-            .filter((line) => line.trim().startsWith("globalThis."))
-            .map((line) => line.trim().split(".")[1]?.split(" ")[0])
-            .filter(Boolean);
-
-          // Log all found globalThis values
-          console.log(
-            "Injected globalThis values:",
-            globalThisAssignments.reduce((acc, key) => {
-              if (key in globalThis) {
-                acc[key] = (globalThis as any)[key];
-              }
-              return acc;
-            }, {} as Record<string, any>)
-          );
-        },
-        args: [ContextBuilder.getInjectionContext(surveyAnswer)],
-      });
-
       chrome.scripting.executeScript({
         target: { tabId: tabId },
         world: "MAIN",
@@ -247,11 +223,6 @@ async function injectContext(surveyAnswer: SurveyAnswers, tabId: number) {
       console.clear();
       console.log("injected context:\n\n", code);
       try {
-        return new Function(code);
-      } catch (e) {
-        console.log("Failed to inject via `new Function(code)` with error:", e);
-      }
-      try {
         let scriptElement = document.querySelector(
           'script[data-injected-context="true"]'
         );
@@ -270,6 +241,11 @@ async function injectContext(surveyAnswer: SurveyAnswers, tabId: number) {
       } catch (e) {
         console.log("Failed to inject via `trustedTypes` with error:", e);
       }
+
+      // verify which functions are available in globalThis
+      const globalFunctions = Object.getOwnPropertyNames(globalThis)
+        .filter(prop => typeof globalThis[prop as keyof typeof globalThis] === 'function' && code.includes(prop));
+      console.log('Available global functions (includes some non-injected functions as well, please ignore for debugging purposes):', globalFunctions);
     },
     args: [injectionContext],
   });

@@ -703,4 +703,11 @@ AdlerWeiner.addQuestion(
   }
 );
 
+AdlerWeiner.addQuestion(
+  [
+    "Thank you so much for completing this survey",
+  ],
+  () => {}
+);
+
 export default AdlerWeiner;
