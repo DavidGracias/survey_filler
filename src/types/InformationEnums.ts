@@ -159,18 +159,23 @@ export interface Vehicle {
   purchasedLocation: VehiclePurchaseLocation,
   purchasePrice: number,
   // Add discriminator to ensure type safety
-  type: 'car' | 'motorcycle';
+  type: VehicleTypes;
+}
+
+export enum VehicleTypes {
+  Car,
+  Motorcycle,
 }
 
 export interface Car extends Vehicle {
-  type: 'car';
+  type: VehicleTypes.Car;
   trim: string | null;
   features: CarFeatures[],
   purchaseReason: CarPurchaseReason[],
 }
 
 export interface Motorcycle extends Vehicle {
-  type: 'motorcycle';
+  type: VehicleTypes.Motorcycle;
   engineSize: number;
 }
 

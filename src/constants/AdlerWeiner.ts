@@ -1,6 +1,7 @@
 import SurveyAnswers from "../types/SurveyAnswers";
 import { Information } from "../types/Information";
 import {
+  CarPurchaseReason,
   EducationLevel,
   EmploymentStatus,
   Gender,
@@ -11,6 +12,11 @@ import {
   VehicleOwnership,
   VehiclePower,
   VehiclePurchaseLocation,
+  VehicleUse,
+  VehicleTypes,
+  Car,
+  CarFeatures,
+  FeatureImportance,
 } from "../types/InformationEnums";
 import {
   chooseWeightedOption,
@@ -931,6 +937,261 @@ AdlerWeiner.addQuestion(
     selectOptionWithText(element, ["sole"]);
   },
   { hardcoded: true }
+);
+
+AdlerWeiner.addQuestion(
+  ["which", "occasions", "do you", "regularly", "use", "vehicle", "for"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
+    const useVehicleFor = (use: VehicleUse) =>
+      information.garage.vehicles.some((vehicle) =>
+        vehicle.dailyUse.includes(use)
+      );
+
+    const commutingToWork = useVehicleFor(VehicleUse.Commute);
+    const roadTrips = useVehicleFor(VehicleUse.RoadTrip);
+    const pleasure = useVehicleFor(VehicleUse.Pleasure);
+    const hauling = useVehicleFor(VehicleUse.Hauling);
+    const dailyPleasure = useVehicleFor(VehicleUse.DailyPleasure);
+    const errands = useVehicleFor(VehicleUse.Errands);
+    const school = useVehicleFor(VehicleUse.School);
+    const business = useVehicleFor(VehicleUse.Business);
+    const rideShare = useVehicleFor(VehicleUse.RideShare);
+    const caufferFriendsFamily = useVehicleFor(VehicleUse.CaufferFriendsFamily);
+
+    if (commutingToWork) {
+      selectOptionWithText(element, ["commut"]);
+    }
+    if (hauling) {
+      selectOptionWithText(element, ["haul", "tow"]);
+    }
+    if (roadTrips) {
+      selectOptionWithText(element, ["road trip"]);
+    }
+    if (pleasure || dailyPleasure) {
+      selectOptionWithText(element, ["pleasure"]);
+    }
+    if (dailyPleasure) {
+      selectOptionWithText(element, ["fun"]);
+    }
+    if (errands) {
+      selectOptionWithText(element, ["driving", "kids"]);
+    }
+    if (school) {
+      selectOptionWithText(element, ["school"]);
+    }
+    if (school || caufferFriendsFamily) {
+      selectOptionWithText(element, ["driving", "kids", "friends"]);
+    }
+    if (business) {
+      selectOptionWithText(element, ["business"]);
+    }
+    if (rideShare) {
+      selectOptionWithText(element, ["ride", "hail"]);
+    }
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["factors", "influenced", "your", "decision", "to", "buy", "vehicle"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
+    const factorsToBuy = (use: CarPurchaseReason) =>
+      information.garage.vehicles
+        .filter((v): v is Car => v.type === VehicleTypes.Car)
+        .some((car) => car.purchaseReason.includes(use));
+
+    const financialIncentive = factorsToBuy(
+      CarPurchaseReason.FinancialIncentive
+    );
+    const familyNeeds = factorsToBuy(CarPurchaseReason.FamilyNeeds);
+    const neededAdditionalVehicle = factorsToBuy(
+      CarPurchaseReason.NeededAdditionalVehicle
+    );
+    const newModel = factorsToBuy(CarPurchaseReason.NewModel);
+    const newTechnology = factorsToBuy(CarPurchaseReason.NewTechnology);
+    const previousCarOutdated = factorsToBuy(
+      CarPurchaseReason.PreviousCarOutdated
+    );
+    const financialSituationChanged = factorsToBuy(
+      CarPurchaseReason.FinancialSituationChanged
+    );
+    const leaseExpired = factorsToBuy(CarPurchaseReason.LeaseExpired);
+    const environment = factorsToBuy(CarPurchaseReason.Environment);
+
+    if (financialIncentive) {
+      selectOptionWithText(element, ["financial", "incentive"]);
+    }
+    if (familyNeeds) {
+      selectOptionWithText(element, ["family", "needs"]);
+    }
+    if (neededAdditionalVehicle) {
+      selectOptionWithText(element, ["need", "additional", "vehicle"]);
+    }
+    if (newModel || newTechnology) {
+      selectOptionWithText(element, ["new", "model", "feature"]);
+    }
+    if (previousCarOutdated) {
+      selectOptionWithText(element, ["previous", "needed", "replacing"]);
+    }
+    if (financialSituationChanged) {
+      selectOptionWithText(element, ["financial", "situation", "changed"]);
+    }
+    if (leaseExpired) {
+      selectOptionWithText(element, ["lease", "expired"]);
+    }
+    if (environment) {
+      setInputValue(element.querySelector("input"), "Environment");
+    }
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["how important", "vehicle", "features", "options", "purchas"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
+    const mostRecentVehicle = information.garage.vehicles
+      .filter((v): v is Car => v.type === VehicleTypes.Car)
+      .sort(
+        (a, b) =>
+          new Date(a.purchaseDate_mmddyyyy_slash).getTime() -
+          new Date(b.purchaseDate_mmddyyyy_slash).getTime()
+      )[0];
+
+    const selectImportanceForFeature = (
+      rowNumber: number,
+      importance: FeatureImportance
+    ) => {
+      const rows = element.querySelectorAll(`tbody > tr`);
+      var i = 2;
+      switch (importance) {
+        case FeatureImportance.SomewhatImportant:
+          i = 1;
+          break;
+        case FeatureImportance.VeryImportant:
+          i = 0;
+          break;
+      }
+      rows[rowNumber].querySelectorAll(`label`)[i].click();
+    };
+
+    const getFeatureImportance = (feature: CarFeatures) => {
+      return (
+        information.garage.featurePreferences.find(
+          (fp) => fp.feature === feature
+        )?.importance ?? FeatureImportance.NotSpecified
+      );
+    };
+
+    mostRecentVehicle.features.forEach((feature) => {
+      switch (feature) {
+        case CarFeatures.AllWheelDrive:
+        case CarFeatures.BackupCamera:
+        case CarFeatures.Bluetooth:
+        case CarFeatures.CruiseControl:
+        case CarFeatures.HeatedSeats:
+        case CarFeatures.Navigation:
+          break;
+        case CarFeatures.SunroofMoonroof:
+          selectImportanceForFeature(0, getFeatureImportance(feature));
+          break;
+        case CarFeatures.PremiumAudio:
+          selectImportanceForFeature(1, getFeatureImportance(feature));
+          break;
+        case CarFeatures.AdvancedDriverAssist:
+          selectImportanceForFeature(2, getFeatureImportance(feature));
+          break;
+        case CarFeatures.PremiumInterior:
+          selectImportanceForFeature(3, getFeatureImportance(feature));
+          break;
+        case CarFeatures.TowingPackage:
+          selectImportanceForFeature(4, getFeatureImportance(feature));
+          break;
+        case CarFeatures.UpgradedInfotainment:
+          selectImportanceForFeature(5, getFeatureImportance(feature));
+          break;
+        case CarFeatures.SportPackage:
+          selectImportanceForFeature(6, getFeatureImportance(feature));
+          break;
+      }
+    });
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["which", "features", "options", "in the vehicle", "you", "purchased/leased"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
+    const mostRecentVehicle = information.garage.vehicles
+      .filter((v): v is Car => v.type === VehicleTypes.Car)
+      .sort(
+        (a, b) =>
+          new Date(a.purchaseDate_mmddyyyy_slash).getTime() -
+          new Date(b.purchaseDate_mmddyyyy_slash).getTime()
+      )[0];
+
+    const selectOptionForFeature = (
+      rowNumber: number,
+      isIncluded: boolean
+    ) => {
+      const rows = element.querySelectorAll(`tbody > tr`);
+      const weightedOptions = [];
+      weightedOptions.push(WeightedOption([0], 1)); // standard
+      weightedOptions.push(WeightedOption([1], 1)); // paid extra
+      const option = chooseWeightedOption(weightedOptions)[0];
+      const i = isIncluded ? option : 2;
+      rows[rowNumber].querySelectorAll(`label`)[i].click();
+    };
+
+    const getFeatureImportance = (feature: CarFeatures) => {
+      return (
+        information.garage.featurePreferences.find(
+          (fp) => fp.feature === feature
+        )?.importance ?? FeatureImportance.NotSpecified
+      );
+    };
+
+    const carIncludesFeature = (feature: CarFeatures) => {
+      return mostRecentVehicle.features.includes(feature);
+    };
+
+    mostRecentVehicle.features.forEach((feature) => {
+      switch (feature) {
+        case CarFeatures.AllWheelDrive:
+        case CarFeatures.BackupCamera:
+        case CarFeatures.Bluetooth:
+        case CarFeatures.CruiseControl:
+        case CarFeatures.HeatedSeats:
+        case CarFeatures.Navigation:
+          break;
+        case CarFeatures.SunroofMoonroof:
+          selectOptionForFeature(0, carIncludesFeature(feature));
+          break;
+        case CarFeatures.PremiumAudio:
+          selectOptionForFeature(1, carIncludesFeature(feature));
+          break;
+        case CarFeatures.AdvancedDriverAssist:
+          selectOptionForFeature(2, carIncludesFeature(feature));
+          break;
+        case CarFeatures.PremiumInterior:
+          selectOptionForFeature(3, carIncludesFeature(feature));
+          break;
+        case CarFeatures.TowingPackage:
+          selectOptionForFeature(4, carIncludesFeature(feature));
+          break;
+        case CarFeatures.UpgradedInfotainment:
+          selectOptionForFeature(5, carIncludesFeature(feature));
+          break;
+        case CarFeatures.SportPackage:
+          selectOptionForFeature(6, carIncludesFeature(feature));
+          break;
+      }
+    });
+  }
 );
 
 AdlerWeiner.addQuestion(
