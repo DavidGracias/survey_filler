@@ -233,8 +233,20 @@ async function injectContext(surveyAnswer: SurveyAnswers, tabId: number) {
     },
     world: "MAIN",
     func: (code, classUnmatched) => {
+      // print the injected context with colors
       console.clear();
-      console.log("injected context:\n\n", code);
+      const color = "color: #4CAF50; font-weight: bold;";
+      const resetColor = "color: inherit; font-weight: normal;";
+      const regex = /globalThis\.(\w+)/g;
+      const styleParams: string[] = [];
+      const formattedCode = code.replace(regex, (_match, key) => {
+        styleParams.push(color, resetColor);
+        return `globalThis.%c${key}%c`;
+      });
+      // Log with all style parameters
+      console.log("injected context:\n\n" + formattedCode, ...styleParams);
+
+      // inject the context
       try {
         let scriptElement = document.querySelector(
           'script[data-injected-context="true"]'
@@ -255,11 +267,9 @@ async function injectContext(surveyAnswer: SurveyAnswers, tabId: number) {
         console.log("Failed to inject via `trustedTypes` with error:", e);
       }
 
-      // verify which functions are available in globalThis
+      // verify which functions are injected in globalThis
       const globalFunctions = Object.getOwnPropertyNames(globalThis).filter(
-        (prop) =>
-          typeof globalThis[prop as keyof typeof globalThis] === "function" &&
-          code.includes(prop)
+        (prop) => new RegExp(`\\b${prop}\\b`).test(code)
       );
       console.log(
         "Available global functions (includes some non-injected functions as well, please ignore for debugging purposes):",
@@ -267,20 +277,13 @@ async function injectContext(surveyAnswer: SurveyAnswers, tabId: number) {
       );
 
       document.addEventListener("click", (e) => {
-        let clickedLabel = false;
-        let element = e.target as HTMLElement;
-        while (element !== document.body) {
-          clickedLabel ||= element instanceof HTMLLabelElement;
-          if (element.classList.contains(classUnmatched)) {
-            clickedLabel && element.classList.remove(classUnmatched);
-            break;
-          }
-          element = element.parentElement as HTMLElement;
-        }
+        const target = e.target as Element;
+        const unmatchedClass_Ancestor = target.closest(`.${classUnmatched}`);
+        const label_Ancestor = target.closest("label");
+        if (unmatchedClass_Ancestor && label_Ancestor)
+          unmatchedClass_Ancestor.classList.remove(classUnmatched);
       });
     },
     args: [injectionContext, classUnmatched],
   });
-
-  await new Promise((resolve) => setTimeout(resolve, 750));
 }

@@ -22,8 +22,8 @@ export default class MissingContextFunctionError extends Error {
 
     questions.forEach((question) => {
       const actionString = question.action.toString();
-      // Find all "case EnumName.Value:" patterns
-      const matches = actionString.matchAll(/case\s+(\w+)\.(\w+):/g);
+      // Find all "EnumName.Value" patterns
+      const matches = actionString.matchAll(/\b(\w+)\.(\w+)\b/g);
 
       for (const match of matches) {
         const [_, minifiedEnumName, enumValue] = match;
@@ -42,7 +42,6 @@ export default class MissingContextFunctionError extends Error {
         )
       );
 
-      // add the enum to the context
       if (enumObj) {
         context.push([enumName, enumObj?.[1]]);
       }

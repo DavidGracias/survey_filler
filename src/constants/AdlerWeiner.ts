@@ -34,12 +34,13 @@ const AdlerWeiner = new SurveyAnswers({
 });
 
 function selectOptionWithText(questionElement: HTMLElement, needles: string[]) {
-  needles = needles.map((n) => n.trim().toLowerCase());
+  const formatString = (str: string) => str.trim().toLowerCase();
+  needles = needles.map(formatString);
   const matchingLabels = Array.from(
     questionElement.querySelectorAll("label")
   ).filter((option_label) => {
-    const haystack = option_label.textContent?.trim().toLowerCase();
-    if (!haystack) return false;
+    if (!option_label.textContent) return false;
+    const haystack = formatString(option_label.textContent);
     var found = true;
     needles.forEach((needle) => (found &&= haystack.includes(needle)));
     return found;
@@ -339,6 +340,7 @@ AdlerWeiner.addQuestion(
   ["ethnic", "background"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
     switch (information.race) {
       case Race.White:
         selectOptionWithText(element, ["white"]);
@@ -379,8 +381,7 @@ AdlerWeiner.addQuestion(
     weightedOptions.push(WeightedOption(["never"], 0));
 
     const option = chooseWeightedOption(weightedOptions);
-
-    if (option) selectOptionWithText(element, option);
+    selectOptionWithText(element, option);
   },
   { hardcoded: true }
 );
@@ -770,6 +771,23 @@ AdlerWeiner.addQuestion(
   ["routine", "travel distance", "day"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    if (
+      information.garage.vehicles.length > 0 &&
+      information.garage.vehicles.some(
+        (vehicle) => vehicle.dailyTravelInMiles > 0
+      )
+    ) {
+      selectOptionWithText(element, ["yes"]);
+    } else {
+      selectOptionWithText(element, ["no"]);
+    }
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["what distance", "drive daily"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
     const distances = information.garage.vehicles.map(
       (vehicle) => vehicle.dailyTravelInMiles
     );
@@ -793,7 +811,7 @@ AdlerWeiner.addQuestion(
     );
 
     setInputValue(
-      element.querySelector("input"),
+      element.querySelector("textarea"),
       vehicleDescriptions.join(", ")
     );
   }
@@ -815,9 +833,12 @@ AdlerWeiner.addQuestion(
     const hybrid = information.garage.vehicles.some(
       (vehicle) => vehicle.powerType === VehiclePower.Hybrid
     );
+    window.alert(
+      "what powers vehicle triggered: " + electric + " " + gas + " " + hybrid
+    );
 
     if (electric) selectOptionWithText(element, ["electric"]);
-    else if (gas) selectOptionWithText(element, ["gasoline"]);
+    else if (gas) selectOptionWithText(element, ["gas"]);
     else if (hybrid) selectOptionWithText(element, ["hybrid"]);
   }
 );
