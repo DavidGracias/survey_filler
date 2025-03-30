@@ -33,15 +33,22 @@ export default function GenericSurvey({
   }, []);
 
   useEffect(() => {
-    let [matchedQuestions, unmatchedQuestionIndices] =
+    let [matchedQuestionsLocal, unmatchedQuestionIndicesLocal] =
       surveyAnswer.getQuestionsFromDocument(document);
     if (!information.hardcodedQuestionsEnabled) {
-      matchedQuestions = matchedQuestions.filter(
+      matchedQuestionsLocal = matchedQuestionsLocal.filter(
         (question) => !question.options.hardcoded
       );
     }
-    setMatchedQuestions(matchedQuestions);
-    setUnmatchedQuestionIndices(unmatchedQuestionIndices);
+
+    if (
+      matchedQuestionsLocal.every(
+        (question, i) => question.text !== matchedQuestions[i]?.text
+      )
+    ) {
+      setMatchedQuestions(matchedQuestionsLocal);
+      setUnmatchedQuestionIndices(unmatchedQuestionIndicesLocal);
+    }
   }, [document]);
 
   useEffect(() => {
@@ -67,7 +74,11 @@ export default function GenericSurvey({
         target: { tabId: tabId },
         world: "MAIN",
         func: markQuestionsAsUnmatched,
-        args: [surveyAnswer.questionSelector, unmatchedQuestionIndices],
+        args: [
+          surveyAnswer.questionSelector,
+          unmatchedQuestionIndices,
+          classUnmatched,
+        ],
       });
 
       if (!unmatchedQuestionIndices.length) {
@@ -175,12 +186,13 @@ function triggerNextButton(tabId: number, surveyAnswer: SurveyAnswers) {
   );
 }
 
+const classUnmatched = "unmatched";
 function markQuestionsAsUnmatched(
   questionSelector: string,
-  questionIndices: number[]
+  questionIndices: number[],
+  classUnmatched: string
 ) {
   // Inject CSS with animation
-  const classUnmatched = "unmatched";
   if (!document.querySelector(`style[data-style="${classUnmatched}"]`)) {
     const style = document.createElement("style");
     style.setAttribute("data-style", classUnmatched);
@@ -209,6 +221,7 @@ function markQuestionsAsUnmatched(
     if (questionIndices.includes(i)) question.classList.add(classUnmatched);
     else question.classList.remove(classUnmatched);
   });
+  document;
 }
 
 async function injectContext(surveyAnswer: SurveyAnswers, tabId: number) {
@@ -219,7 +232,7 @@ async function injectContext(surveyAnswer: SurveyAnswers, tabId: number) {
       allFrames: true,
     },
     world: "MAIN",
-    func: (code) => {
+    func: (code, classUnmatched) => {
       console.clear();
       console.log("injected context:\n\n", code);
       try {
@@ -243,11 +256,30 @@ async function injectContext(surveyAnswer: SurveyAnswers, tabId: number) {
       }
 
       // verify which functions are available in globalThis
-      const globalFunctions = Object.getOwnPropertyNames(globalThis)
-        .filter(prop => typeof globalThis[prop as keyof typeof globalThis] === 'function' && code.includes(prop));
-      console.log('Available global functions (includes some non-injected functions as well, please ignore for debugging purposes):', globalFunctions);
+      const globalFunctions = Object.getOwnPropertyNames(globalThis).filter(
+        (prop) =>
+          typeof globalThis[prop as keyof typeof globalThis] === "function" &&
+          code.includes(prop)
+      );
+      console.log(
+        "Available global functions (includes some non-injected functions as well, please ignore for debugging purposes):",
+        globalFunctions
+      );
+
+      document.addEventListener("click", (e) => {
+        let clickedLabel = false;
+        let element = e.target as HTMLElement;
+        while (element !== document.body) {
+          clickedLabel ||= element instanceof HTMLLabelElement;
+          if (element.classList.contains(classUnmatched)) {
+            clickedLabel && element.classList.remove(classUnmatched);
+            break;
+          }
+          element = element.parentElement as HTMLElement;
+        }
+      });
     },
-    args: [injectionContext],
+    args: [injectionContext, classUnmatched],
   });
 
   await new Promise((resolve) => setTimeout(resolve, 750));

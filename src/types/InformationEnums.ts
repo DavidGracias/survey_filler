@@ -4,9 +4,9 @@ export enum People {
 }
 
 export enum Gender {
-  Male = "m",
-  Female = "f",
-  NonBinary = "n",
+  Male,
+  Female,
+  NonBinary,
 }
 
 export interface Phone {
@@ -16,21 +16,21 @@ export interface Phone {
 }
 
 export enum MaritalStatus {
-  Single = "single",
-  LivingWithSO = "living with significant other",
-  Married = "married",
-  Divorced = "divorced",
-  Separated = "separated",
-  Widowed = "widowed",
-  DomesticPartner = "domestic partner",
+  Single,
+  LivingWithSO,
+  Married,
+  Divorced,
+  Separated,
+  Widowed,
+  DomesticPartner,
 }
 
 export enum Relationship {
-  Child = "child",
-  SignificantOther = "significant other",
-  Parent = "parent",
-  OtherFamily = "other family",
-  Other = "other",
+  Child,
+  SignificantOther,
+  Parent,
+  OtherFamily,
+  Other,
 }
 
 export interface Housemate {
@@ -42,13 +42,13 @@ export interface Housemate {
 
 export enum JobCollar {
   // manual labor
-  Blue = "blue",
+  Blue,
   // personal services (healthcare, childcare, etc.)
-  Pink = "pink",
+  Pink,
   // professional services (law, finance, consulting, etc.)
-  White = "white",
+  White,
   // in between white and blue
-  Grey = "grey",
+  Grey,
 }
 
 export interface Employment {
@@ -66,78 +66,188 @@ export interface Education {
 }
 
 export enum EmploymentStatus {
-  FullTimeInPerson = "full time in person",
-  FullTimeRemote = "full time remote",
-  PartTime = "part time",
-  SelfEmployed = "self employed",
-  Student = "student",
-  Homemaker = "homemaker",
-  Unemployed = "unemployed",
-  Retired = "retired",
-  Other = "other",
+  FullTimeInPerson,
+  FullTimeRemote,
+  PartTime,
+  SelfEmployed,
+  Student,
+  Homemaker,
+  Unemployed,
+  Retired,
+  Other,
 }
 
 export enum EducationLevel {
-  HighSchool = "high school",
-  Associates = "associates",
-  BachelorScience = "bachelors science",
-  BachelorArts = "bachelors arts",
-  Masters = "masters",
-  Doctorate = "doctorate",
-  Other = "other",
+  HighSchool,
+  Associates,
+  BachelorScience,
+  BachelorArts,
+  Masters,
+  Doctorate,
+  Other,
 }
 
 export enum PoliticalAffiliation {
-  Democrat = "democrat",
-  Republican = "republican",
-  LeanDemocrat = "lean democrat",
-  LeanRepublican = "lean republican",
-  Independent = "independent",
-  IndependentLeanDemocrat = "independent lean democrat",
-  IndependentLeanRepublican = "independent lean republican",
-  Libertarian = "libertarian",
-  Green = "green",
-  Communist = "communist",
-  Other = "other",
+  Democrat,
+  Republican,
+  LeanDemocrat,
+  LeanRepublican,
+  Independent,
+  IndependentLeanDemocrat,
+  IndependentLeanRepublican,
+  Libertarian,
+  Green,
+  Communist,
+  Other,
 }
 
 export enum Timezone {
-  PT = "pt",
-  MT = "mt",
-  CT = "ct",
-  ET = "et",
+  PT,
+  MT,
+  CT,
+  ET,
 }
 
 export enum Region {
-  Northeast = "ne",
-  Midwest = "mw",
-  South = "s",
-  California = "c",
-  West = "w",
-  Unknown = "",
+  Northeast,
+  Midwest,
+  South,
+  California,
+  West,
+  Unknown,
 }
 
 export enum Race {
-  Hispanic = "hispanic",
-  White = "white",
-  Black = "black",
-  Asian = "asian",
-  PacificIslander = "pacific islander",
-  MiddleEastern = "middle eastern",
-  NativeAmerican = "native american",
-  MixedRace = "mixed race",
-  Other = "other",
+  Hispanic,
+  White,
+  Black,
+  Asian,
+  PacificIslander,
+  MiddleEastern,
+  NativeAmerican,
+  MixedRace,
+  Other,
 }
 
 export enum NationOfOrigin {
-  USA = "United States",
-  Canada = "Canada",
-  Mexico = "Mexico",
-  China = "China",
-  India = "India",
-  Brazil = "Brazil",
-  Ecuador = "Ecuador",
-  Colombia = "Colombia",
+  USA,
+  Canada,
+  Mexico,
+  China,
+  India,
+  Brazil,
+  Ecuador,
+  Colombia,
   // Add more nations as needed
-  Other = "Other",
+  Other,
+}
+
+export interface Garage {
+  vehicles: Vehicle[],
+  featurePreferences: CarFeaturePreference[],
+}
+
+export interface Vehicle {
+  ownership: VehicleOwnership,
+  dailyTravelInMiles: number,
+  dailyUse: VehicleUse[],
+  make: string,
+  model: string,
+  productionYear: number,
+  purchaseDate_mmddyyyy_slash: string,
+  powerType: VehiclePower,
+  purchasedLocation: VehiclePurchaseLocation,
+  purchasePrice: number,
+  // Add discriminator to ensure type safety
+  type: 'car' | 'motorcycle';
+}
+
+export interface Car extends Vehicle {
+  type: 'car';
+  trim: string | null;
+  features: CarFeatures[],
+  purchaseReason: CarPurchaseReason[],
+}
+
+export interface Motorcycle extends Vehicle {
+  type: 'motorcycle';
+  engineSize: number;
+}
+
+export enum VehicleOwnership {
+  PurchasedNew,
+  PurchasedUsed,
+  CertifiedPreOwned,
+  Leased,
+  CompanyVehicle,
+}
+
+export enum VehiclePower {
+  Electric,
+  Gas,
+  Diesel,
+  Hybrid,
+}
+
+export enum VehiclePurchaseLocation {
+  Dealer,
+  Carvana,
+  CarMax,
+  PrivateSale,
+  OnlineWebsite,
+}
+
+export enum VehicleUse {
+  Commute,
+  RoadTrip,
+  Pleasure,
+  DailyPleasure,
+  Hauling,
+  Errands,
+  CaufferFriendsFamily,
+  School,
+  Business,
+  RideShare,
+}
+
+export enum CarFeatures {
+  AllWheelDrive,
+  BackupCamera,
+  Bluetooth,
+  CruiseControl,
+  HeatedSeats,
+  Navigation,
+  SunroofMoonroof,
+  PremiumAudio,
+  AdvancedDriverAssist,
+  PremiumInterior,
+  TowingPackage,
+  UpgradedInfotainment,
+  SportPackage,
+  Other,
+}
+
+export enum FeatureImportance {
+  VeryImportant,
+  SomewhatImportant,
+  NotThatImportant,
+  NotSpecified
+}
+
+export interface CarFeaturePreference {
+  feature: CarFeatures;
+  importance: FeatureImportance;
+}
+
+export enum CarPurchaseReason {
+  FinancialIncentive,
+  FamilyNeeds,
+  NeededAdditionalVehicle,
+  NewModel,
+  NewTechnology,
+  PreviousCarOutdated,
+  FinancialSituationChanged,
+  LeaseExpired,
+  Environment,
+  Other,
 }

@@ -1,0 +1,9 @@
+---
+description: 
+globs: src/constants/*
+alwaysApply: false
+---
+Whenever I'm on a blank line after a previous .addQuestion call, suggest an additional .addQuestion call to the current surveyAnswer that's being exported with empty / default values
+(method) SurveyAnswers.addQuestion(questionText: MatchText, questionAction: MatchAction, overrideOptions?: Partial<QuestionOptions>): void
+
+Set the default questionText to `[]` and the default questionAction to `(information: Information, selector: string, i: number) => {}` and ignore / skip the overrideOptions param

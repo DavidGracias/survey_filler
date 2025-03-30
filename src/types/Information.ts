@@ -6,8 +6,9 @@ export class Information {
   lastName: string;
   fullName: string;
   gender: InformationEnums.Gender;
-  maritalStatus: InformationEnums.MaritalStatus;
+  maritalStatus: InformationEnums.MaritalStatus | string;
   household: InformationEnums.Housemate[];
+  garage: InformationEnums.Garage;
   age: number;
   email: string;
   phone: InformationEnums.Phone;
@@ -58,7 +59,7 @@ export class Information {
         this.phone = {
           number: "7082052545",
           make: "iPhone",
-          model: "Xs"
+          model: "Xs",
         };
 
         this.streetAddress = "8688 E Raintree Drive";
@@ -90,6 +91,52 @@ export class Information {
         this.politicalAffiliation =
           InformationEnums.PoliticalAffiliation.IndependentLeanDemocrat;
 
+        this.garage = {
+          vehicles: [
+            {
+              ownership: InformationEnums.VehicleOwnership.PurchasedUsed,
+              dailyTravelInMiles: 30,
+              dailyUse: [
+                InformationEnums.VehicleUse.Commute,
+                InformationEnums.VehicleUse.RoadTrip,
+                InformationEnums.VehicleUse.Hauling,
+                InformationEnums.VehicleUse.Errands,
+                InformationEnums.VehicleUse.CaufferFriendsFamily,
+              ],
+              make: "Ford",
+              model: "Taurus",
+              productionYear: 2009,
+              purchaseDate_mmddyyyy_slash: "03/01/2022",
+              powerType: InformationEnums.VehiclePower.Gas,
+              purchasedLocation:
+                InformationEnums.VehiclePurchaseLocation.PrivateSale,
+              purchasePrice: 3200,
+              features: [
+                InformationEnums.CarFeatures.CruiseControl,
+                InformationEnums.CarFeatures.Bluetooth,
+              ],
+              purchaseReason: [
+                InformationEnums.CarPurchaseReason.FamilyNeeds,
+                InformationEnums.CarPurchaseReason.NeededAdditionalVehicle,
+              ],
+            } as InformationEnums.Car,
+          ],
+          featurePreferences: [
+            {
+              feature: InformationEnums.CarFeatures.CruiseControl,
+              importance: InformationEnums.FeatureImportance.SomewhatImportant,
+            },
+            {
+              feature: InformationEnums.CarFeatures.Bluetooth,
+              importance: InformationEnums.FeatureImportance.VeryImportant,
+            },
+            {
+              feature: InformationEnums.CarFeatures.SunroofMoonroof,
+              importance: InformationEnums.FeatureImportance.NotThatImportant,
+            },
+          ],
+        };
+
         this.hardcodedQuestionsEnabled = true;
         break;
 
@@ -115,7 +162,7 @@ export class Information {
         this.phone = {
           number: "7038538605",
           make: "iPhone",
-          model: "Xs"
+          model: "Xs",
         };
 
         this.streetAddress = "4219 W Purdue Ave.";
@@ -149,6 +196,91 @@ export class Information {
 
         this.politicalAffiliation =
           InformationEnums.PoliticalAffiliation.IndependentLeanDemocrat;
+
+        this.garage = {
+          vehicles: [
+            {
+              ownership: InformationEnums.VehicleOwnership.PurchasedUsed,
+              dailyTravelInMiles: 30,
+              dailyUse: [
+                InformationEnums.VehicleUse.Commute,
+                InformationEnums.VehicleUse.RoadTrip,
+                InformationEnums.VehicleUse.Hauling,
+                InformationEnums.VehicleUse.Errands,
+                InformationEnums.VehicleUse.CaufferFriendsFamily,
+              ],
+              make: "Ford",
+              model: "Taurus",
+              trim: "SE",
+              productionYear: 2007,
+              purchaseDate_mmddyyyy_slash: "03/01/2022",
+              powerType: InformationEnums.VehiclePower.Gas,
+              purchasedLocation:
+                InformationEnums.VehiclePurchaseLocation.PrivateSale,
+              purchasePrice: 3200,
+              features: [
+                InformationEnums.CarFeatures.CruiseControl,
+                InformationEnums.CarFeatures.Bluetooth,
+              ],
+              purchaseReason: [
+                InformationEnums.CarPurchaseReason.FamilyNeeds,
+                InformationEnums.CarPurchaseReason.NeededAdditionalVehicle,
+              ],
+            } as InformationEnums.Car,
+            {
+              ownership: InformationEnums.VehicleOwnership.PurchasedUsed,
+              dailyTravelInMiles: 0,
+              dailyUse: [InformationEnums.VehicleUse.Pleasure],
+              make: "Volkswagen",
+              model: "Eos",
+              trim: null,
+              productionYear: 2008,
+              purchaseDate_mmddyyyy_slash: "11/17/2023",
+              powerType: InformationEnums.VehiclePower.Gas,
+              purchasedLocation:
+                InformationEnums.VehiclePurchaseLocation.PrivateSale,
+              purchasePrice: 3600,
+              features: [
+                InformationEnums.CarFeatures.CruiseControl,
+                InformationEnums.CarFeatures.Bluetooth,
+                InformationEnums.CarFeatures.SunroofMoonroof,
+              ],
+              purchaseReason: [
+                InformationEnums.CarPurchaseReason.PreviousCarOutdated,
+                InformationEnums.CarPurchaseReason.NewTechnology,
+              ],
+            } as InformationEnums.Car,
+            {
+              ownership: InformationEnums.VehicleOwnership.PurchasedUsed,
+              dailyTravelInMiles: 0,
+              dailyUse: [
+                InformationEnums.VehicleUse.Pleasure,
+              ],
+              make: "Honda",
+              model: "ST1300",
+              productionYear: 2010,
+              purchaseDate_mmddyyyy_slash: "03/15/2023",
+              powerType: InformationEnums.VehiclePower.Gas,
+              purchasedLocation: InformationEnums.VehiclePurchaseLocation.PrivateSale,
+              purchasePrice: 300,
+              engineSize: 1300,
+            } as InformationEnums.Motorcycle
+          ],
+          featurePreferences: [
+            {
+              feature: InformationEnums.CarFeatures.CruiseControl,
+              importance: InformationEnums.FeatureImportance.SomewhatImportant,
+            },
+            {
+              feature: InformationEnums.CarFeatures.Bluetooth,
+              importance: InformationEnums.FeatureImportance.VeryImportant,
+            },
+            {
+              feature: InformationEnums.CarFeatures.SunroofMoonroof,
+              importance: InformationEnums.FeatureImportance.NotThatImportant,
+            },
+          ],
+        };
 
         this.hardcodedQuestionsEnabled = true;
     }
@@ -206,7 +338,7 @@ function getAge(birthday: string): number {
 }
 
 function getRegion(state: string): InformationEnums.Region {
-  const usRegions = {
+  const usRegions: Record<InformationEnums.Region, string[]> = {
     [InformationEnums.Region.Northeast]: [
       "Maine",
       "New Hampshire",
@@ -264,11 +396,17 @@ function getRegion(state: string): InformationEnums.Region {
       "Alaska",
       "Hawaii",
     ],
-    [InformationEnums.Region.California]: ["California"], // special case for many places
+    [InformationEnums.Region.California]: ["California"],
+    [InformationEnums.Region.Unknown]: [],
   };
-
-  for (const region of Object.keys(usRegions) as (keyof typeof usRegions)[]) {
-    if (usRegions[region].includes(state)) return region;
+  // Get only the numeric enum values
+  const regions = Object.keys(usRegions)
+    .map(Number)
+    .filter((key) => !isNaN(key)) as InformationEnums.Region[];
+  for (const region of regions) {
+    if (usRegions[region].includes(state)) {
+      return region;
+    }
   }
 
   return InformationEnums.Region.Unknown;

@@ -1,6 +1,17 @@
 import SurveyAnswers from "../types/SurveyAnswers";
 import { Information } from "../types/Information";
-import { EducationLevel } from "../types/InformationEnums";
+import {
+  EducationLevel,
+  EmploymentStatus,
+  Gender,
+  MaritalStatus,
+  Race,
+  Region,
+  Relationship,
+  VehicleOwnership,
+  VehiclePower,
+  VehiclePurchaseLocation,
+} from "../types/InformationEnums";
 import {
   chooseWeightedOption,
   WeightedOption,
@@ -148,27 +159,27 @@ AdlerWeiner.addQuestion(
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
 
     switch (information.region) {
-      case "c":
+      case Region.California:
         const weightedOptions = [];
         weightedOptions.push(WeightedOption(["Southern CA"], 1));
         weightedOptions.push(WeightedOption(["Northern CA"], 1));
         const option = chooseWeightedOption(weightedOptions);
         if (option) selectOptionWithText(element, option);
         break;
-      case "w":
+      case Region.West:
         selectOptionWithText(element, ["West outside of CA"]);
         break;
-      case "mw":
+      case Region.Midwest:
         if (information.state.toLowerCase() == "illinois") {
           selectOptionWithText(element, ["Illinois"]);
         } else {
           selectOptionWithText(element, ["Midwest outside of Illinois"]);
         }
         break;
-      case "s":
+      case Region.South:
         selectOptionWithText(element, ["South"]);
         break;
-      case "ne":
+      case Region.Northeast:
         selectOptionWithText(element, ["Northeast"]);
         break;
       default:
@@ -184,13 +195,13 @@ AdlerWeiner.addQuestion(
 
     let gender = "other";
     switch (information.gender) {
-      case "m":
+      case Gender.Male:
         gender = "male";
         break;
-      case "f":
+      case Gender.Female:
         gender = "female";
         break;
-      case "n":
+      case Gender.NonBinary:
         gender = "non-binary";
         break;
     }
@@ -205,13 +216,13 @@ AdlerWeiner.addQuestion(
 
     let gender = "other";
     switch (information.gender) {
-      case "m":
+      case Gender.Male:
         gender = "male";
         break;
-      case "f":
+      case Gender.Female:
         gender = "female";
         break;
-      case "n":
+      case Gender.NonBinary:
         gender = "non binary";
         break;
     }
@@ -269,21 +280,24 @@ AdlerWeiner.addQuestion(
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
     switch (information.race) {
-      case "white":
+      case Race.White:
         selectOptionWithText(element, ["caucasian"]);
         break;
-      case "black":
+      case Race.Black:
         selectOptionWithText(element, ["african", "american"]);
         break;
-      case "asian":
+      case Race.Asian:
         selectOptionWithText(element, ["asian"]);
         break;
-      case "hispanic":
+      case Race.Hispanic:
         selectOptionWithText(element, ["hispanic"]);
         break;
       default:
         selectOptionWithText(element, ["other"]);
-        setInputValue(element.querySelector("input"), information.race);
+        setInputValue(
+          element.querySelector("input"),
+          information.race.toString()
+        );
         break;
     }
   }
@@ -294,25 +308,28 @@ AdlerWeiner.addQuestion(
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
     switch (information.race) {
-      case "white":
+      case Race.White:
         selectOptionWithText(element, ["white"]);
         break;
-      case "black":
+      case Race.Black:
         selectOptionWithText(element, ["black"]);
         break;
-      case "asian":
+      case Race.Asian:
         selectOptionWithText(element, ["asian"]);
         break;
-      case "hispanic":
+      case Race.Hispanic:
         selectOptionWithText(element, ["hispanic"]);
         break;
-      case "native american":
-      case "middle eastern":
-      case "mixed race":
-      case "other":
+      case Race.NativeAmerican:
+      case Race.MiddleEastern:
+      case Race.MixedRace:
+      case Race.Other:
         selectOptionWithText(element, ["other"]);
 
-        setInputValue(element.querySelector("input"), information.race);
+        setInputValue(
+          element.querySelector("input"),
+          information.race.toString()
+        );
         break;
     }
   }
@@ -323,24 +340,27 @@ AdlerWeiner.addQuestion(
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
     switch (information.race) {
-      case "white":
+      case Race.White:
         selectOptionWithText(element, ["white"]);
         break;
-      case "black":
+      case Race.Black:
         selectOptionWithText(element, ["black"]);
         break;
-      case "asian":
+      case Race.Asian:
         selectOptionWithText(element, ["asian"]);
         break;
-      case "hispanic":
+      case Race.Hispanic:
         selectOptionWithText(element, ["hispanic"]);
         break;
-      case "native american":
-      case "middle eastern":
-      case "mixed race":
-      case "other":
+      case Race.NativeAmerican:
+      case Race.MiddleEastern:
+      case Race.MixedRace:
+      case Race.Other:
         selectOptionWithText(element, ["other"]);
-        setInputValue(element.querySelector("input"), information.race);
+        setInputValue(
+          element.querySelector("input"),
+          information.race.toString()
+        );
         break;
     }
   }
@@ -416,25 +436,25 @@ AdlerWeiner.addQuestion(
 
     let status: string[] = [];
     switch (information.employment.status) {
-      case "full time in person":
+      case EmploymentStatus.FullTimeInPerson:
         status = ["full", "time", "outside"];
         break;
-      case "self employed":
-      case "full time remote":
+      case EmploymentStatus.SelfEmployed:
+      case EmploymentStatus.FullTimeRemote:
         status = ["full", "time", "work from home"];
         break;
-      case "part time":
+      case EmploymentStatus.PartTime:
         status = ["part", "time"];
         break;
-      case "student":
+      case EmploymentStatus.Student:
         status = ["student"];
         break;
-      case "homemaker":
+      case EmploymentStatus.Homemaker:
         status = ["homemaker"];
         break;
-      case "retired":
-      case "other":
-      case "unemployed":
+      case EmploymentStatus.Retired:
+      case EmploymentStatus.Other:
+      case EmploymentStatus.Unemployed:
         status = ["unemployed"];
         break;
     }
@@ -466,25 +486,25 @@ AdlerWeiner.addQuestion(
 
     let status: string[] = [];
     switch (information.employment.status) {
-      case "full time in person":
-      case "full time remote":
+      case EmploymentStatus.FullTimeInPerson:
+      case EmploymentStatus.FullTimeRemote:
         status = ["full", "time"];
         break;
-      case "part time":
+      case EmploymentStatus.PartTime:
         status = ["part", "time"];
         break;
-      case "self employed":
+      case EmploymentStatus.SelfEmployed:
         status = ["self", "employed"];
         break;
-      case "student":
+      case EmploymentStatus.Student:
         status = ["student", "not working"];
         break;
-      case "homemaker":
+      case EmploymentStatus.Homemaker:
         status = ["homemaker"];
         break;
-      case "retired":
-      case "other":
-      case "unemployed":
+      case EmploymentStatus.Retired:
+      case EmploymentStatus.Other:
+      case EmploymentStatus.Unemployed:
         status = ["unemployed"];
         break;
     }
@@ -525,12 +545,12 @@ AdlerWeiner.addQuestion(
       option = ["alone"];
     } else if (
       information.household.filter(
-        (housemate) => housemate.relationship === "significant other"
+        (housemate) => housemate.relationship === Relationship.SignificantOther
       ).length > 0
     ) {
       option = ["significant other"];
       const children = information.household.filter(
-        (housemate) => housemate.relationship === "child"
+        (housemate) => housemate.relationship === Relationship.Child
       );
       if (children.length > 0) {
         option.push("children");
@@ -542,7 +562,7 @@ AdlerWeiner.addQuestion(
       }
     } else if (
       information.household.filter(
-        (housemate) => housemate.relationship === "other"
+        (housemate) => housemate.relationship === Relationship.Other
       ).length == information.household.length
     ) {
       option = ["roommate"];
@@ -559,7 +579,7 @@ AdlerWeiner.addQuestion(
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
     const childrenUnder18 = information.household
-      .filter((housemate) => housemate.relationship === "child")
+      .filter((housemate) => housemate.relationship === Relationship.Child)
       .filter((child) => child.age <= 18);
     if (childrenUnder18.length > 0) {
       selectOptionWithText(element, ["yes"]);
@@ -577,23 +597,22 @@ AdlerWeiner.addQuestion(
   ["Are you...", "single", "married"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
-
     switch (information.maritalStatus) {
-      case "single":
+      case MaritalStatus.Single:
         selectOptionWithText(element, ["single"]);
         break;
-      case "married":
+      case MaritalStatus.Married:
         selectOptionWithText(element, ["married"]);
         break;
-      case "domestic partner":
-      case "living with significant other":
+      case MaritalStatus.DomesticPartner:
+      case MaritalStatus.LivingWithSO:
         selectOptionWithText(element, ["cohabitat"]);
         break;
-      case "separated":
-      case "divorced":
+      case MaritalStatus.Separated:
+      case MaritalStatus.Divorced:
         selectOptionWithText(element, ["divorce", "separate"]);
         break;
-      case "widowed":
+      case MaritalStatus.Widowed:
         selectOptionWithText(element, ["widow"]);
         break;
     }
@@ -606,7 +625,7 @@ AdlerWeiner.addQuestion(
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
 
     const childrenUnder18 = information.household
-      .filter((housemate) => housemate.relationship === "child")
+      .filter((housemate) => housemate.relationship === Relationship.Child)
       .filter((child) => child.age <= 18);
     if (childrenUnder18.length > 0) {
       selectOptionWithText(element, ["yes"]);
@@ -670,14 +689,18 @@ AdlerWeiner.addQuestion(
 
     const labels = Array.from(element.querySelectorAll("label"));
     labels.forEach((label) => {
-      if (label.innerText.toLowerCase().includes(information.employment.collar))
+      if (
+        label.innerText
+          .toLowerCase()
+          .includes(information.employment.collar.toString())
+      )
         pressLabelIfNotChecked(label);
     });
   }
 );
 
 AdlerWeiner.addQuestion(
-  ["highest", "education", "level", "complete"],
+  ["highest", "education", "level"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
 
@@ -704,8 +727,200 @@ AdlerWeiner.addQuestion(
 );
 
 AdlerWeiner.addQuestion(
+  ["Do you", "own", "vehicle"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
+    const ownsVehicle = information.garage.vehicles.some(
+      (vehicle) =>
+        vehicle.ownership === VehicleOwnership.PurchasedNew ||
+        vehicle.ownership === VehicleOwnership.PurchasedUsed ||
+        vehicle.ownership === VehicleOwnership.CertifiedPreOwned
+    );
+    const leasedVehicle = information.garage.vehicles.some(
+      (vehicle) => vehicle.ownership === VehicleOwnership.Leased
+    );
+    const companyVehicle = information.garage.vehicles.some(
+      (vehicle) => vehicle.ownership === VehicleOwnership.CompanyVehicle
+    );
+    if (ownsVehicle) {
+      selectOptionWithText(element, ["own"]);
+    } else if (leasedVehicle) {
+      selectOptionWithText(element, ["lease"]);
+    } else if (companyVehicle) {
+      selectOptionWithText(element, ["company"]);
+    } else {
+      selectOptionWithText(element, ["no"]);
+    }
+  }
+);
+
+AdlerWeiner.addQuestion(
   [
-    "Thank you so much for completing this survey",
+    "Do you routinely travel distances using this car for day-to-day activities",
+  ],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    selectOptionWithText(element, ["yes"]);
+  },
+  { hardcoded: true }
+);
+
+AdlerWeiner.addQuestion(
+  ["routine", "travel distance", "day"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    const distances = information.garage.vehicles.map(
+      (vehicle) => vehicle.dailyTravelInMiles
+    );
+    setInputValue(
+      element.querySelector("input"),
+      Math.max(...distances).toString()
+    );
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["make", "model", "year", "vehicle"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
+    const vehicleDescriptions = information.garage.vehicles.map(
+      (vehicle) =>
+        `${vehicle.productionYear} ${vehicle.make} ${vehicle.model}${
+          "trim" in vehicle ? ` ${vehicle.trim}` : ""
+        }`
+    );
+
+    setInputValue(
+      element.querySelector("input"),
+      vehicleDescriptions.join(", ")
+    );
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["What", "powers", "vehicle"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
+    const electric = information.garage.vehicles.some(
+      (vehicle) => vehicle.powerType === VehiclePower.Electric
+    );
+    const gas = information.garage.vehicles.some(
+      (vehicle) =>
+        vehicle.powerType === VehiclePower.Gas ||
+        vehicle.powerType === VehiclePower.Diesel
+    );
+    const hybrid = information.garage.vehicles.some(
+      (vehicle) => vehicle.powerType === VehiclePower.Hybrid
+    );
+
+    if (electric) selectOptionWithText(element, ["electric"]);
+    else if (gas) selectOptionWithText(element, ["gasoline"]);
+    else if (hybrid) selectOptionWithText(element, ["hybrid"]);
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["When", "purchase", "lease", "vehicle"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
+    const vehicles = information.garage.vehicles.map((vehicle) =>
+      new Date(vehicle.purchaseDate_mmddyyyy_slash).getTime()
+    );
+    const newestVehiclePurchaseDate = vehicles.sort((a, b) => a - b)[0];
+
+    const xMonthsAgo = (x: number) =>
+      new Date(Date.now() - x * 30 * 24 * 60 * 60 * 1000).getTime();
+    const withinLast3Months = newestVehiclePurchaseDate > xMonthsAgo(3);
+    const withinLast6Months = newestVehiclePurchaseDate > xMonthsAgo(6);
+
+    const xYearsAgo = (x: number) => xMonthsAgo(x * 12);
+    const withinLastYear = newestVehiclePurchaseDate > xYearsAgo(1);
+    const withinLast2Years = newestVehiclePurchaseDate > xYearsAgo(2);
+    const withinLast4Years = newestVehiclePurchaseDate > xYearsAgo(4);
+
+    if (withinLast3Months) {
+      selectOptionWithText(element, ["within the last 6 months"]);
+      selectOptionWithText(element, ["within the last 3 months"]);
+    } else if (withinLast6Months) {
+      selectOptionWithText(element, ["within the last 6 months"]);
+    } else if (withinLastYear) {
+      selectOptionWithText(element, ["within the last year"]);
+      selectOptionWithText(element, ["6 months to 12 months"]);
+    } else if (withinLast2Years) {
+      selectOptionWithText(element, ["1-2 years ago"]);
+    } else if (withinLast4Years) {
+      selectOptionWithText(element, ["3-4 years ago"]);
+    } else {
+      const labels = Array.from(element.querySelectorAll("label"));
+      pressLabelIfNotChecked(labels[labels.length - 1]);
+    }
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["Where did you purchase/lease this vehicle", "how did you acquire it"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
+    const newestVehicle = information.garage.vehicles.sort(
+      (a, b) =>
+        new Date(a.purchaseDate_mmddyyyy_slash).getTime() -
+        new Date(b.purchaseDate_mmddyyyy_slash).getTime()
+    )[0];
+
+    const [purchaseLocation, purchaseCondition] = [
+      newestVehicle.purchasedLocation,
+      newestVehicle.ownership,
+    ];
+
+    if (purchaseLocation === VehiclePurchaseLocation.Dealer) {
+      selectOptionWithText(element, ["dealer"]);
+    } else if (purchaseLocation === VehiclePurchaseLocation.PrivateSale) {
+      selectOptionWithText(element, ["private sale"]);
+    } else if (purchaseLocation === VehiclePurchaseLocation.OnlineWebsite) {
+      selectOptionWithText(element, ["online website"]);
+    } else if (purchaseLocation === VehiclePurchaseLocation.Carvana) {
+      selectOptionWithText(element, ["carvana"]);
+    } else if (purchaseLocation === VehiclePurchaseLocation.CarMax) {
+      selectOptionWithText(element, ["carmax"]);
+    }
+
+    if (purchaseCondition === VehicleOwnership.PurchasedNew) {
+      selectOptionWithText(element, ["purchased", "new"]);
+    } else if (purchaseCondition === VehicleOwnership.PurchasedUsed) {
+      selectOptionWithText(element, ["bought", "used"]);
+    } else if (purchaseCondition === VehicleOwnership.CertifiedPreOwned) {
+      selectOptionWithText(element, ["certified", "pre-owned"]);
+    } else if (purchaseCondition === VehicleOwnership.Leased) {
+      selectOptionWithText(element, ["leased"]);
+    } else {
+      selectOptionWithText(element, ["purchased", "new"]);
+    }
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["to what extent", "sole", "primary", "shared", "decision-maker"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    selectOptionWithText(element, ["sole"]);
+  },
+  { hardcoded: true }
+);
+
+AdlerWeiner.addQuestion(
+  ["Thank you so much for completing this survey"],
+  () => {}
+);
+
+AdlerWeiner.addQuestion(
+  [
+    "This is the last page of the survey",
+    "It is important that you answer all of these questions",
   ],
   () => {}
 );

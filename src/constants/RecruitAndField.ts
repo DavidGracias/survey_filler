@@ -279,7 +279,7 @@ RecruitAndField.addQuestion(
         break;
       default:
         text = ["other"];
-        setInputValue(element.querySelector("input"), information.race);
+        setInputValue(element.querySelector("input"), information.race.toString());
     }
     selectOptionWithText(element, text);
   }
@@ -355,7 +355,7 @@ RecruitAndField.addQuestion(
         text = ["other"];
         setInputValue(
           element.querySelector("input"),
-          information.employment.status
+          information.employment.status.toString()
         );
     }
     selectOptionWithText(element, text);
@@ -423,7 +423,7 @@ RecruitAndField.addQuestion(
         text = ["other"];
         setInputValue(
           element.querySelector("input"),
-          information.education.level
+          information.education.level.toString()
         );
     }
     selectOptionWithText(element, text);
