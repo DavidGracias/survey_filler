@@ -94,6 +94,7 @@ export class Information {
         this.garage = {
           vehicles: [
             {
+              type: InformationEnums.VehicleTypes.Car,
               ownership: InformationEnums.VehicleOwnership.PurchasedUsed,
               dailyTravelInMiles: 30,
               dailyUse: [
@@ -200,6 +201,7 @@ export class Information {
         this.garage = {
           vehicles: [
             {
+              type: InformationEnums.VehicleTypes.Car,
               ownership: InformationEnums.VehicleOwnership.PurchasedUsed,
               dailyTravelInMiles: 30,
               dailyUse: [
@@ -228,6 +230,7 @@ export class Information {
               ],
             } as InformationEnums.Car,
             {
+              type: InformationEnums.VehicleTypes.Car,
               ownership: InformationEnums.VehicleOwnership.PurchasedUsed,
               dailyTravelInMiles: 0,
               dailyUse: [InformationEnums.VehicleUse.Pleasure],
@@ -242,8 +245,10 @@ export class Information {
               purchasePrice: 3600,
               features: [
                 InformationEnums.CarFeatures.CruiseControl,
-                InformationEnums.CarFeatures.Bluetooth,
                 InformationEnums.CarFeatures.SunroofMoonroof,
+                InformationEnums.CarFeatures.PremiumInterior,
+                InformationEnums.CarFeatures.UpgradedInfotainment,
+                InformationEnums.CarFeatures.SportPackage,
               ],
               purchaseReason: [
                 InformationEnums.CarPurchaseReason.PreviousCarOutdated,
@@ -251,6 +256,7 @@ export class Information {
               ],
             } as InformationEnums.Car,
             {
+              type: InformationEnums.VehicleTypes.Motorcycle,
               ownership: InformationEnums.VehicleOwnership.PurchasedUsed,
               dailyTravelInMiles: 0,
               dailyUse: [
@@ -277,7 +283,19 @@ export class Information {
             },
             {
               feature: InformationEnums.CarFeatures.SunroofMoonroof,
-              importance: InformationEnums.FeatureImportance.NotThatImportant,
+              importance: InformationEnums.FeatureImportance.SomewhatImportant,
+            },
+            {
+              feature: InformationEnums.CarFeatures.HeatedSeats,
+              importance: InformationEnums.FeatureImportance.SomewhatImportant,
+            },
+            {
+              feature: InformationEnums.CarFeatures.UpgradedInfotainment,
+              importance: InformationEnums.FeatureImportance.SomewhatImportant,
+            },
+            {
+              feature: InformationEnums.CarFeatures.PremiumAudio,
+              importance: InformationEnums.FeatureImportance.SomewhatImportant,
             },
           ],
         };

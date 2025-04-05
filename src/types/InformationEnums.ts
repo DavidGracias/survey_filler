@@ -158,7 +158,6 @@ export interface Vehicle {
   powerType: VehiclePower,
   purchasedLocation: VehiclePurchaseLocation,
   purchasePrice: number,
-  // Add discriminator to ensure type safety
   type: VehicleTypes;
 }
 

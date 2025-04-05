@@ -839,9 +839,6 @@ AdlerWeiner.addQuestion(
     const hybrid = information.garage.vehicles.some(
       (vehicle) => vehicle.powerType === VehiclePower.Hybrid
     );
-    window.alert(
-      "what powers vehicle triggered: " + electric + " " + gas + " " + hybrid
-    );
 
     if (electric) selectOptionWithText(element, ["electric"]);
     else if (gas) selectOptionWithText(element, ["gas"]);
@@ -1054,7 +1051,7 @@ AdlerWeiner.addQuestion(
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
 
     const mostRecentVehicle = information.garage.vehicles
-      .filter((v): v is Car => v.type === VehicleTypes.Car)
+      .filter((v): v is Car => v.type == VehicleTypes.Car)
       .sort(
         (a, b) =>
           new Date(a.purchaseDate_mmddyyyy_slash).getTime() -
@@ -1079,45 +1076,51 @@ AdlerWeiner.addQuestion(
     };
 
     const getFeatureImportance = (feature: CarFeatures) => {
-      return (
-        information.garage.featurePreferences.find(
-          (fp) => fp.feature === feature
-        )?.importance ?? FeatureImportance.NotSpecified
+      const defaultImportance = FeatureImportance.NotSpecified;
+      const garageImportance = information.garage.featurePreferences.find(
+        (fp) => fp.feature === feature
+      )?.importance;
+
+      const weightedOptions = [];
+      weightedOptions.push(WeightedOption(FeatureImportance.VeryImportant, 2));
+      weightedOptions.push(
+        WeightedOption(FeatureImportance.SomewhatImportant, 1)
       );
+
+      if (mostRecentVehicle.features.includes(feature)) {
+        return garageImportance ?? chooseWeightedOption(weightedOptions);
+      }
+      return garageImportance ?? defaultImportance;
     };
 
-    mostRecentVehicle.features.forEach((feature) => {
-      switch (feature) {
-        case CarFeatures.AllWheelDrive:
-        case CarFeatures.BackupCamera:
-        case CarFeatures.Bluetooth:
-        case CarFeatures.CruiseControl:
-        case CarFeatures.HeatedSeats:
-        case CarFeatures.Navigation:
-          break;
-        case CarFeatures.SunroofMoonroof:
-          selectImportanceForFeature(0, getFeatureImportance(feature));
-          break;
-        case CarFeatures.PremiumAudio:
-          selectImportanceForFeature(1, getFeatureImportance(feature));
-          break;
-        case CarFeatures.AdvancedDriverAssist:
-          selectImportanceForFeature(2, getFeatureImportance(feature));
-          break;
-        case CarFeatures.PremiumInterior:
-          selectImportanceForFeature(3, getFeatureImportance(feature));
-          break;
-        case CarFeatures.TowingPackage:
-          selectImportanceForFeature(4, getFeatureImportance(feature));
-          break;
-        case CarFeatures.UpgradedInfotainment:
-          selectImportanceForFeature(5, getFeatureImportance(feature));
-          break;
-        case CarFeatures.SportPackage:
-          selectImportanceForFeature(6, getFeatureImportance(feature));
-          break;
+    const rows = element.querySelectorAll(`tbody > tr`);
+    for (let i = 0; i < rows.length; i++) {
+      const featureText = rows[i]
+        .querySelector(`td`)!
+        .textContent!.toLowerCase()
+        .replace(/\s+/g, " ");
+      var feature: CarFeatures | undefined;
+
+      if (featureText.includes("sunroof") || featureText.includes("moonroof")) {
+        feature = CarFeatures.SunroofMoonroof;
+      } else if (featureText.includes("premium audio")) {
+        feature = CarFeatures.PremiumAudio;
+      } else if (featureText.includes("advanced driver assist")) {
+        feature = CarFeatures.AdvancedDriverAssist;
+      } else if (featureText.includes("premium interior")) {
+        feature = CarFeatures.PremiumInterior;
+      } else if (featureText.includes("towed")) {
+        feature = CarFeatures.TowingPackage;
+      } else if (featureText.includes("upgraded infotainment")) {
+        feature = CarFeatures.UpgradedInfotainment;
+      } else if (featureText.includes("sport package")) {
+        feature = CarFeatures.SportPackage;
       }
-    });
+
+      if (feature) {
+        selectImportanceForFeature(i, getFeatureImportance(feature));
+      }
+    }
   }
 );
 
@@ -1134,63 +1137,43 @@ AdlerWeiner.addQuestion(
           new Date(b.purchaseDate_mmddyyyy_slash).getTime()
       )[0];
 
-    const selectOptionForFeature = (
-      rowNumber: number,
-      isIncluded: boolean
-    ) => {
-      const rows = element.querySelectorAll(`tbody > tr`);
-      const weightedOptions = [];
-      weightedOptions.push(WeightedOption([0], 1)); // standard
-      weightedOptions.push(WeightedOption([1], 1)); // paid extra
-      const option = chooseWeightedOption(weightedOptions)[0];
-      const i = isIncluded ? option : 2;
-      rows[rowNumber].querySelectorAll(`label`)[i].click();
-    };
+    const rows = element.querySelectorAll(`tbody > tr`);
+    for (let i = 0; i < rows.length; i++) {
+      const featureText = rows[i]
+        .querySelector(`td`)!
+        .textContent!.toLowerCase()
+        .replace(/\s+/g, " ");
+      var feature: CarFeatures | undefined;
 
-    const getFeatureImportance = (feature: CarFeatures) => {
-      return (
-        information.garage.featurePreferences.find(
-          (fp) => fp.feature === feature
-        )?.importance ?? FeatureImportance.NotSpecified
-      );
-    };
-
-    const carIncludesFeature = (feature: CarFeatures) => {
-      return mostRecentVehicle.features.includes(feature);
-    };
-
-    mostRecentVehicle.features.forEach((feature) => {
-      switch (feature) {
-        case CarFeatures.AllWheelDrive:
-        case CarFeatures.BackupCamera:
-        case CarFeatures.Bluetooth:
-        case CarFeatures.CruiseControl:
-        case CarFeatures.HeatedSeats:
-        case CarFeatures.Navigation:
-          break;
-        case CarFeatures.SunroofMoonroof:
-          selectOptionForFeature(0, carIncludesFeature(feature));
-          break;
-        case CarFeatures.PremiumAudio:
-          selectOptionForFeature(1, carIncludesFeature(feature));
-          break;
-        case CarFeatures.AdvancedDriverAssist:
-          selectOptionForFeature(2, carIncludesFeature(feature));
-          break;
-        case CarFeatures.PremiumInterior:
-          selectOptionForFeature(3, carIncludesFeature(feature));
-          break;
-        case CarFeatures.TowingPackage:
-          selectOptionForFeature(4, carIncludesFeature(feature));
-          break;
-        case CarFeatures.UpgradedInfotainment:
-          selectOptionForFeature(5, carIncludesFeature(feature));
-          break;
-        case CarFeatures.SportPackage:
-          selectOptionForFeature(6, carIncludesFeature(feature));
-          break;
+      if (featureText.includes("sunroof") || featureText.includes("moonroof")) {
+        feature = CarFeatures.SunroofMoonroof;
+      } else if (featureText.includes("premium audio")) {
+        feature = CarFeatures.PremiumAudio;
+      } else if (featureText.includes("advanced driver assist")) {
+        feature = CarFeatures.AdvancedDriverAssist;
+      } else if (featureText.includes("premium interior")) {
+        feature = CarFeatures.PremiumInterior;
+      } else if (featureText.includes("towed")) {
+        feature = CarFeatures.TowingPackage;
+      } else if (featureText.includes("upgraded infotainment")) {
+        feature = CarFeatures.UpgradedInfotainment;
+      } else if (featureText.includes("sport package")) {
+        feature = CarFeatures.SportPackage;
       }
-    });
+
+      if (feature) {
+        var j = 2;
+        if (mostRecentVehicle.features.includes(feature)) {
+          const weightedOptions = [];
+          // paid extra
+          weightedOptions.push(WeightedOption(0, 2));
+          // standard
+          weightedOptions.push(WeightedOption(1, 1));
+          j = chooseWeightedOption(weightedOptions);
+        }
+        rows[i].querySelectorAll(`label`)[j].click();
+      }
+    }
   }
 );
 
