@@ -79,23 +79,30 @@ class SurveyAnswers implements SurveyAnswersContext {
       hardcoded: false,
       ...overrideOptions, // Override defaults with any provided values
     };
+
     const questionPromise = new Promise<void>((resolve, reject) => {
-      const formattedQuestionText = questionText.map(this.formatString);
+      const formattedQuestionText = questionText
+        .map(this.formatString)
+        .filter((text) => text.replace(/\s/g, "") !== "");
+
       if (
         this.questions.some(
           (question) =>
             question.text.sort().join() === formattedQuestionText.sort().join()
         )
-      ) {
-        reject(new Error("Question already exists for: " + questionText));
-      } else {
-        this.questions.push({
-          text: formattedQuestionText,
-          action: questionAction,
-          options: options,
-        });
-        resolve();
-      }
+      )
+        reject(
+          new Error(
+            "Duplicate question text: " + formattedQuestionText.join(", ")
+          )
+        );
+
+      this.questions.push({
+        text: formattedQuestionText,
+        action: questionAction,
+        options: options,
+      });
+      resolve();
     });
 
     this.questionPromises.push(questionPromise);
@@ -187,10 +194,9 @@ class SurveyAnswers implements SurveyAnswersContext {
 
   private formatString(str: string): string {
     return str
-      .replace(/([^a-zA-Z0-9])/g, " ")
-      .replace(/\s{2,}/g, " ")
       .toLowerCase()
-      .trim();
+      .replace(/([^a-z0-9])/g, " ")
+      .replace(/\s{2,}/g, " ");
   }
 
   printQuestions(): void {

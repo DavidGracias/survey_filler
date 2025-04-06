@@ -1,13 +1,14 @@
 import { Alert, Button, Container, Divider, Typography } from "@mui/material";
 import { useEffect, useState, useMemo } from "react";
 import ComponentProps from "../types/ComponentProps";
-import { DEBUG_MODE } from "../App";
+import { DEBUG_MODE, defaultBody } from "../App";
 import SurveyAnswers, { MatchedQuestion } from "../types/SurveyAnswers";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import ContextBuilder from "../types/ContextBuilder";
+import { executeScript } from "../constants/util/chrome";
 
 export default function GenericSurvey({
   url,
@@ -48,6 +49,7 @@ export default function GenericSurvey({
     ) {
       setMatchedQuestions(matchedQuestionsLocal);
       setUnmatchedQuestionIndices(unmatchedQuestionIndicesLocal);
+      if (!matchedQuestionsLocal.length) triggerNextButton(tabId, surveyAnswer);
     }
   }, [document]);
 
@@ -60,26 +62,24 @@ export default function GenericSurvey({
 
       // Then proceed with questions
       for (const question of matchedQuestions) {
-        await chrome.scripting.executeScript({
-          target: { tabId: tabId },
-          world: "MAIN",
-          func: question.action,
-          args: [information, surveyAnswer.questionSelector, question.i],
-        });
+        await executeScript(
+          tabId,
+          [information, surveyAnswer.questionSelector, question.i],
+          question.action
+        );
       }
     };
 
     answerQuestionsSequentially().then(() => {
-      chrome.scripting.executeScript({
-        target: { tabId: tabId },
-        world: "MAIN",
-        func: markQuestionsAsUnmatched,
-        args: [
+      executeScript(
+        tabId,
+        [
           surveyAnswer.questionSelector,
           unmatchedQuestionIndices,
           classUnmatched,
         ],
-      });
+        markQuestionsAsUnmatched
+      );
 
       if (!unmatchedQuestionIndices.length) {
         triggerNextButton(tabId, surveyAnswer);
@@ -177,11 +177,11 @@ export default function GenericSurvey({
 function triggerNextButton(tabId: number, surveyAnswer: SurveyAnswers) {
   setTimeout(
     () =>
-      chrome.scripting.executeScript({
-        target: { tabId: tabId },
-        func: surveyAnswer.nextButtonAction,
-        args: [surveyAnswer.nextButtonSelector],
-      }),
+      executeScript(
+        tabId,
+        [surveyAnswer.nextButtonSelector],
+        surveyAnswer.nextButtonAction
+      ),
     250
   );
 }
@@ -226,13 +226,10 @@ function markQuestionsAsUnmatched(
 
 async function injectContext(surveyAnswer: SurveyAnswers, tabId: number) {
   const injectionContext = ContextBuilder.getInjectionContext(surveyAnswer);
-  await chrome.scripting.executeScript({
-    target: {
-      tabId: tabId,
-      allFrames: true,
-    },
-    world: "MAIN",
-    func: (code, classUnmatched) => {
+  await executeScript(
+    tabId,
+    [injectionContext, classUnmatched],
+    (code, classUnmatched) => {
       // print the injected context with colors
       console.clear();
       const color = "color: #4CAF50; font-weight: bold;";
@@ -267,6 +264,16 @@ async function injectContext(surveyAnswer: SurveyAnswers, tabId: number) {
         console.log("Failed to inject via `trustedTypes` with error:", e);
       }
 
+      document.addEventListener("click", (e) => {
+        const target = e.target as Element;
+        const unmatchedClass_Ancestor = target.closest(`.${classUnmatched}`);
+        const label_Ancestor = target.closest("label");
+        if (unmatchedClass_Ancestor && label_Ancestor)
+          unmatchedClass_Ancestor.classList.remove(classUnmatched);
+      });
+    }
+  ).then(() =>
+    executeScript(tabId, [injectionContext], (code) => {
       // verify which functions are injected in globalThis
       const globalFunctions = Object.getOwnPropertyNames(globalThis).filter(
         (prop) => new RegExp(`\\b${prop}\\b`).test(code)
@@ -275,15 +282,6 @@ async function injectContext(surveyAnswer: SurveyAnswers, tabId: number) {
         "Available global functions (includes some non-injected functions as well, please ignore for debugging purposes):",
         globalFunctions
       );
-
-      document.addEventListener("click", (e) => {
-        const target = e.target as Element;
-        const unmatchedClass_Ancestor = target.closest(`.${classUnmatched}`);
-        const label_Ancestor = target.closest("label");
-        if (unmatchedClass_Ancestor && label_Ancestor)
-          unmatchedClass_Ancestor.classList.remove(classUnmatched);
-      });
-    },
-    args: [injectionContext, classUnmatched],
-  });
+    })
+  );
 }

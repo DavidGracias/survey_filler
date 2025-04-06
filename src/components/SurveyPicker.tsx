@@ -20,6 +20,8 @@ import PRC from "../constants/PRC";
 import RecruitAndField from "../constants/RecruitAndField";
 import AdlerWeiner from "../constants/AdlerWeiner";
 import FocusInsite from "../constants/FocusInsite";
+import ConsumerViewpoint from "../constants/ConsumerViewpoint";
+import { compareImages } from "../constants/util/Images";
 
 enum SurveyProviders {
   PRC,
@@ -28,6 +30,7 @@ enum SurveyProviders {
   AdlerWeiner,
   FocusInsite,
   // Hilton,
+  ConsumerViewpoint,
   Unknown,
 }
 
@@ -38,6 +41,7 @@ const surveyAnswers: Record<SurveyProviders, SurveyAnswers | undefined> = {
   [SurveyProviders.AdlerWeiner]: AdlerWeiner,
   [SurveyProviders.FocusInsite]: FocusInsite,
   // [SurveyProviders.Hilton]: undefined,
+  [SurveyProviders.ConsumerViewpoint]: ConsumerViewpoint,
   [SurveyProviders.Unknown]: undefined,
 };
 
@@ -53,44 +57,50 @@ export default function SurveyPicker({
   const [surveyAnswer, setSurveyAnswer] = useState<SurveyAnswers>();
   const [openSurveyProviderDropdown, setOpenSurveyProviderDropdown] =
     useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (body == defaultBody) return;
-
-    const document = new DOMParser().parseFromString(body, "text/html");
-    const headerImageSrc = (
-      document.querySelector("header img") as HTMLImageElement | null
-    )?.src;
+    if (body === defaultBody) return;
 
     if (url.includes("panelfox.io/s/FieldGoals"))
       setSurveyProvider(SurveyProviders.FieldWork);
+    else if (url.includes("focusinsite.com"))
+      setSurveyProvider(SurveyProviders.FocusInsite);
     else if (
       body.includes("This form was created inside of Recruit and Field Inc.")
     )
       setSurveyProvider(SurveyProviders.RecruitAndField);
-    else if (surveyProvider == SurveyProviders.Unknown && headerImageSrc) {
-      const headerImage = new Image();
-      headerImage.src = headerImageSrc;
+    else if (
+      body.includes("This form was created inside of Consumer Viewpoint.")
+    )
+      setSurveyProvider(SurveyProviders.ConsumerViewpoint);
+    else if (surveyProvider === SurveyProviders.Unknown) {
+      const document = new DOMParser().parseFromString(body, "text/html");
+      const headerImageSrc = (
+        document.querySelector("header img") as HTMLImageElement | null
+      )?.src;
+      if (headerImageSrc) {
+        const headerImage = new Image();
+        headerImage.src = headerImageSrc;
 
-      const adlerWeinerImage = new Image();
-      adlerWeinerImage.src = "../assets/adlerweinerresearch.png";
-      compareImages(headerImage, adlerWeinerImage, () =>
-        setSurveyProvider(SurveyProviders.AdlerWeiner)
-      );
+        const adlerWeinerImage = new Image();
+        adlerWeinerImage.src = "../assets/adlerweinerresearch.png";
+        compareImages(headerImage, adlerWeinerImage, () =>
+          setSurveyProvider(SurveyProviders.AdlerWeiner)
+        );
+      }
     }
   }, [body, url]);
 
   useEffect(() => {
     const fetchSurveyAnswer = async () => {
-      const surveyAnswer = surveyAnswers[surveyProvider];
-      if (surveyAnswer !== undefined) {
-        await surveyAnswer.waitForAllQuestions();
-        setOpenSurveyProviderDropdown(false);
-      }
-
-      setSurveyAnswer(surveyAnswer);
+      setIsLoading(true);
+      const answer = surveyAnswers[surveyProvider];
+      await answer?.waitForAllQuestions();
+      setSurveyAnswer(answer);
+      setOpenSurveyProviderDropdown(answer === undefined);
+      setIsLoading(false);
     };
-
     fetchSurveyAnswer();
   }, [surveyProvider]);
 
@@ -117,11 +127,11 @@ export default function SurveyPicker({
                   key={provider}
                 >
                   <ListItemIcon>
-                    {provider == surveyProvider && <StarBorder />}
+                    {provider === surveyProvider && <StarBorder />}
                   </ListItemIcon>
                   <ListItemText
                     primary={
-                      SurveyProviders[provider] ==
+                      SurveyProviders[provider] ===
                       SurveyProviders[SurveyProviders.Unknown]
                         ? "Unset"
                         : SurveyProviders[provider]
@@ -134,7 +144,11 @@ export default function SurveyPicker({
       </Container>
       <Divider />
 
-      {surveyAnswer === undefined ? (
+      {isLoading ? (
+        <Container>
+          <h1>Loading Survey...</h1>
+        </Container>
+      ) : surveyAnswer === undefined ? (
         <Container>
           <h1>Unknown Survey Provider</h1>
           <p>Survey provider not recognized.</p>
@@ -150,43 +164,4 @@ export default function SurveyPicker({
       )}
     </>
   );
-}
-
-async function compareImages(
-  image1: HTMLImageElement,
-  image2: HTMLImageElement,
-  onMatch: () => void
-) {
-  while (!image1.complete || !image2.complete) {
-    await new Promise((resolve) => setTimeout(resolve, 100));
-  }
-
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.min(image1.width, image2.width);
-  canvas.height = Math.min(image1.height, image2.height);
-  const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
-
-  ctx.drawImage(image1, 0, 0, canvas.width, canvas.height);
-  const image1Data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas before drawing image2
-  ctx.drawImage(image2, 0, 0, canvas.width, canvas.height);
-  const image2Data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-
-  let similarPixels = 0;
-  const pixelTolerance = 30;
-
-  for (let i = 0; i < image1Data.length; i += 4) {
-    let isSimilar = true;
-    // Iterate over RGBA for each pixel
-    for (let j = 0; j < 4; ++j)
-      isSimilar &&=
-        Math.abs(image1Data[i + j] - image2Data[i + j]) <= pixelTolerance;
-    if (isSimilar) similarPixels++;
-  }
-
-  const totalPixels = canvas.width * canvas.height;
-
-  const similarityThreshold = 0.7;
-  if (similarPixels / totalPixels >= similarityThreshold) onMatch();
 }

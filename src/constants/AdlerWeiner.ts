@@ -36,7 +36,11 @@ const AdlerWeiner = new SurveyAnswers({
     button?.click();
   },
   questionSelector: "div.question-container",
-  additionalContext: [selectOptionWithText, pressLabelIfNotChecked],
+  additionalContext: [
+    selectOptionWithText,
+    pressLabelIfNotChecked,
+    getCarFeatureFromText,
+  ],
 });
 
 function selectOptionWithText(questionElement: HTMLElement, needles: string[]) {
@@ -62,6 +66,28 @@ function selectOptionWithText(questionElement: HTMLElement, needles: string[]) {
 
 function pressLabelIfNotChecked(label: HTMLLabelElement) {
   if (!label.classList.contains("checked")) label.click();
+}
+
+function getCarFeatureFromText(text: string) {
+  const featureText = text.toLowerCase().replace(/\s+/g, " ");
+  var feature: CarFeatures | undefined;
+
+  if (featureText.includes("sunroof") || featureText.includes("moonroof")) {
+    feature = CarFeatures.SunroofMoonroof;
+  } else if (featureText.includes("premium audio")) {
+    feature = CarFeatures.PremiumAudio;
+  } else if (featureText.includes("advanced driver assist")) {
+    feature = CarFeatures.AdvancedDriverAssist;
+  } else if (featureText.includes("premium interior")) {
+    feature = CarFeatures.PremiumInterior;
+  } else if (featureText.includes("towed")) {
+    feature = CarFeatures.TowingPackage;
+  } else if (featureText.includes("upgraded infotainment")) {
+    feature = CarFeatures.UpgradedInfotainment;
+  } else if (featureText.includes("sport package")) {
+    feature = CarFeatures.SportPackage;
+  }
+  return feature;
 }
 
 AdlerWeiner.addQuestion(
@@ -1095,27 +1121,9 @@ AdlerWeiner.addQuestion(
 
     const rows = element.querySelectorAll(`tbody > tr`);
     for (let i = 0; i < rows.length; i++) {
-      const featureText = rows[i]
-        .querySelector(`td`)!
-        .textContent!.toLowerCase()
-        .replace(/\s+/g, " ");
-      var feature: CarFeatures | undefined;
-
-      if (featureText.includes("sunroof") || featureText.includes("moonroof")) {
-        feature = CarFeatures.SunroofMoonroof;
-      } else if (featureText.includes("premium audio")) {
-        feature = CarFeatures.PremiumAudio;
-      } else if (featureText.includes("advanced driver assist")) {
-        feature = CarFeatures.AdvancedDriverAssist;
-      } else if (featureText.includes("premium interior")) {
-        feature = CarFeatures.PremiumInterior;
-      } else if (featureText.includes("towed")) {
-        feature = CarFeatures.TowingPackage;
-      } else if (featureText.includes("upgraded infotainment")) {
-        feature = CarFeatures.UpgradedInfotainment;
-      } else if (featureText.includes("sport package")) {
-        feature = CarFeatures.SportPackage;
-      }
+      const feature = getCarFeatureFromText(
+        rows[i].querySelector(`td`)!.textContent!
+      );
 
       if (feature) {
         selectImportanceForFeature(i, getFeatureImportance(feature));
@@ -1139,27 +1147,9 @@ AdlerWeiner.addQuestion(
 
     const rows = element.querySelectorAll(`tbody > tr`);
     for (let i = 0; i < rows.length; i++) {
-      const featureText = rows[i]
-        .querySelector(`td`)!
-        .textContent!.toLowerCase()
-        .replace(/\s+/g, " ");
-      var feature: CarFeatures | undefined;
-
-      if (featureText.includes("sunroof") || featureText.includes("moonroof")) {
-        feature = CarFeatures.SunroofMoonroof;
-      } else if (featureText.includes("premium audio")) {
-        feature = CarFeatures.PremiumAudio;
-      } else if (featureText.includes("advanced driver assist")) {
-        feature = CarFeatures.AdvancedDriverAssist;
-      } else if (featureText.includes("premium interior")) {
-        feature = CarFeatures.PremiumInterior;
-      } else if (featureText.includes("towed")) {
-        feature = CarFeatures.TowingPackage;
-      } else if (featureText.includes("upgraded infotainment")) {
-        feature = CarFeatures.UpgradedInfotainment;
-      } else if (featureText.includes("sport package")) {
-        feature = CarFeatures.SportPackage;
-      }
+      const feature = getCarFeatureFromText(
+        rows[i].querySelector(`td`)!.textContent!
+      );
 
       if (feature) {
         var j = 2;

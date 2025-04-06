@@ -1,6 +1,8 @@
 import * as InformationEnums from "./InformationEnums";
 
 export class Information {
+  person: InformationEnums.People;
+
   firstName: string;
   middleName: string;
   lastName: string;
@@ -39,6 +41,7 @@ export class Information {
   constructor(person: InformationEnums.People) {
     switch (person) {
       case InformationEnums.People.Bela:
+        this.person = InformationEnums.People.Bela;
         this.firstName = "Izabela";
         this.middleName = "Joy";
         this.lastName = "Quintas";
@@ -79,6 +82,7 @@ export class Information {
           status: InformationEnums.EmploymentStatus.Homemaker,
           collar: InformationEnums.JobCollar.Grey,
           salary: 145000,
+          linkedin: "https://www.linkedin.com/in/bela-quintas-949370241/",
         };
         this.education = {
           level: InformationEnums.EducationLevel.BachelorScience,
@@ -143,6 +147,7 @@ export class Information {
 
       case InformationEnums.People.David:
       default:
+        this.person = InformationEnums.People.David;
         this.firstName = "David";
         this.middleName = "";
         this.lastName = "Garcia";
@@ -186,6 +191,7 @@ export class Information {
           industry: "Technology",
           employer: "Atlassian",
           salary: 145000,
+          linkedin: "https://www.linkedin.com/in/david-gracias/",
         };
         this.education = {
           level: InformationEnums.EducationLevel.BachelorScience,

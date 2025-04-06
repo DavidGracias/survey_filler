@@ -17,6 +17,7 @@ import SurveyPicker from "./components/SurveyPicker";
 import StarIcon from "@mui/icons-material/Star";
 import { Block, ExpandLess, ExpandMore } from "@mui/icons-material";
 import { People } from "./types/InformationEnums";
+import { executeScript } from "./constants/util/chrome";
 const darkTheme = createTheme({
   palette: {
     mode: "dark",
@@ -46,11 +47,7 @@ export default function App() {
     // Shouldn't get tab information (ex. programatic tab open)
     if (["", "about:blank"].includes(tab.url)) return;
 
-    chrome.scripting
-      .executeScript({
-        target: { tabId: tab.id! },
-        func: () => document.querySelector("body")!.outerHTML,
-      })
+    executeScript(tab.id!, [], () => document.querySelector("body")!.outerHTML)
       .then((results) => {
         setBody(results[0].result!);
         // if (DEBUG_MODE && body != results[0].result!) alert(`Body Changed!`);

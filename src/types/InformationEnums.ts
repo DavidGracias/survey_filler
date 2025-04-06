@@ -58,6 +58,7 @@ export interface Employment {
   collar: JobCollar;
   employer?: string;
   salary?: number;
+  linkedin?: string;
 }
 
 export interface Education {
