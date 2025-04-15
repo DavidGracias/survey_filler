@@ -1,14 +1,17 @@
 export function indexFromRanges(elements: HTMLElement[], value: number): number {
   let under: number | undefined, over: number;
 
-  for (const e of Array.from(elements).filter((e) =>
-    e.textContent!.includes("-")
-  )) {
-    var [lower, higher] = e.textContent!.trim().split("-");
+  const ranges = elements.map((e) => e.textContent!.trim().replace(/[–]/g, "-"));
+
+  if (ranges.filter((e) => e.includes("-")).length == 0)
+    window.alert("No ranges found");
+
+  for (const range of ranges.filter((e) => e.includes("-"))) {
+    var [lower, higher] = range.split("-");
     lower = lower.replace(/[^0-9]/g, "");
     higher = higher.replace(/[^0-9]/g, "");
     if (parseInt(lower) <= value && value <= parseInt(higher))
-      return elements.indexOf(e);
+      return ranges.indexOf(range);
 
     if (under == undefined) under = parseInt(lower);
     over = parseInt(higher);

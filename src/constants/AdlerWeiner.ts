@@ -92,9 +92,10 @@ function getCarFeatureFromText(text: string) {
 
 AdlerWeiner.addQuestion(
   [
-    "Right to Opt-Out Info",
-    "Financial Incentive Info",
-    "Adler Weiner Privacy Policy",
+    "Right to Opt-Out",
+    "Incentive",
+    "Weiner Privacy Policy",
+    "I consent to",
   ],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
@@ -104,6 +105,37 @@ AdlerWeiner.addQuestion(
     }
   },
   { hardcoded: true }
+);
+
+AdlerWeiner.addQuestion(
+  [
+    "the following",
+    "Name",
+    "Address",
+    "Apt # if applicable",
+    "City/Town",
+    "State/Province",
+    "ZIP/Postal Code",
+    "Email Address",
+    "Phone Number",
+  ],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    const inputs = element.querySelectorAll("input");
+    const answers = [
+      information.fullName,
+      information.streetAddress,
+      information.streetAddressII ?? "",
+      information.city,
+      information.state,
+      information.zipcode,
+      information.email,
+      information.phone.number,
+    ];
+    for (let i = 0; i < answers.length; i++) {
+      setInputValue(inputs[i] as HTMLInputElement, answers[i]);
+    }
+  }
 );
 
 AdlerWeiner.addQuestion(
@@ -168,6 +200,36 @@ AdlerWeiner.addQuestion(
 );
 
 AdlerWeiner.addQuestion(
+  ["when", "market", "research", "study"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    const options = []
+    options.push(WeightedOption(["last", "3", "months"], 0));
+    options.push(WeightedOption(["3", "-", "6", "months"], 1));
+    options.push(WeightedOption(["over", "6", "months"], 9));
+    options.push(WeightedOption(["never"], 0));
+    const option = chooseWeightedOption(options);
+    if (option) selectOptionWithText(element, option);
+  },
+  { hardcoded: true }
+);
+
+AdlerWeiner.addQuestion(
+  ["what", "topics", "participate", "marketing research"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    const options = []
+    options.push(WeightedOption(["Pet Food", "Virtual Reality", "Cannabis Consumption"], 1));
+    options.push(WeightedOption(["Politics"], 1));
+    options.push(WeightedOption(["Airbags", "Beer"], 1));
+    const option = chooseWeightedOption(options);
+
+    setInputValue(element.querySelector("textarea"), option.join(", "));
+  },
+  { hardcoded: true }
+);
+
+AdlerWeiner.addQuestion(
   ["Which area of the country is your permanent residence?"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
@@ -227,18 +289,23 @@ AdlerWeiner.addQuestion(
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
 
     let gender = "other";
+    let gender2 = "not specified";
     switch (information.gender) {
       case Gender.Male:
         gender = "male";
+        gender2 = "man";
         break;
       case Gender.Female:
         gender = "female";
+        gender2 = "woman";
         break;
       case Gender.NonBinary:
         gender = "non-binary";
+        gender2 = "non-binary";
         break;
     }
     selectOptionWithText(element, [gender]);
+    selectOptionWithText(element, [gender2]);
   }
 );
 
@@ -264,6 +331,16 @@ AdlerWeiner.addQuestion(
 );
 
 AdlerWeiner.addQuestion(
+  ["which", "contains", "your", "age"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    const options = Array.from(element.querySelectorAll("label"));
+    const index = indexFromRanges(options, information.age);
+    if (index != -1) pressLabelIfNotChecked(options[index]);
+  }
+);
+
+AdlerWeiner.addQuestion(
   ["age", "group"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
@@ -275,6 +352,16 @@ AdlerWeiner.addQuestion(
 
 AdlerWeiner.addQuestion(
   ["age", "category"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    const options = Array.from(element.querySelectorAll("label"));
+    const index = indexFromRanges(options, information.age);
+    if (index != -1) pressLabelIfNotChecked(options[index]);
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["what", "is", "your", "age"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
     const options = Array.from(element.querySelectorAll("label"));
@@ -513,6 +600,32 @@ AdlerWeiner.addQuestion(
 );
 
 AdlerWeiner.addQuestion(
+  ["what", "current", "occupation"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
+    const answers = [
+      information.employment.occupation,
+      information.employment.employer,
+      information.employment.industry,
+    ];
+    const inputs = element.querySelectorAll("input");
+    for (let i = 0; i < answers.length; i++) {
+      setInputValue(inputs[i], answers[i] || "N/A");
+    }
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["household", "work", "any of the", "following industries"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    selectOptionWithText(element, ["None of the above"]);
+  },
+  { hardcoded: true }
+);
+
+AdlerWeiner.addQuestion(
   ["describes", "employment", "status"],
   (information: Information, selector: string, i: number) => {
     const element = document.querySelectorAll(selector)[i] as HTMLElement;
@@ -565,6 +678,25 @@ AdlerWeiner.addQuestion(
     const labels = Array.from(element.querySelectorAll("label"));
     const index = indexFromRanges(labels, information.employment?.salary ?? 0);
     if (index != -1) pressLabelIfNotChecked(labels[index]);
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["income", "category", "household", "income"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+
+    const labels = Array.from(element.querySelectorAll("label"));
+    const index = indexFromRanges(labels, information.employment?.salary ?? 0);
+    if (index != -1) pressLabelIfNotChecked(labels[index]);
+  }
+);
+
+AdlerWeiner.addQuestion(
+  ["household", "preparing", "filing", "tax", "return"],
+  (information: Information, selector: string, i: number) => {
+    const element = document.querySelectorAll(selector)[i] as HTMLElement;
+    selectOptionWithText(element, ["only", "me"]);
   }
 );
 
