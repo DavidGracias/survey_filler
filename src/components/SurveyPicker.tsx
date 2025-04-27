@@ -68,8 +68,8 @@ export default function SurveyPicker({
       const sp_uuid = url.split("?sp_uuid=")[1];
       const sp_uuid_david = "8a2667e0-771d-4150-b6da-cdfd9d582736";
       if (information.person == People.David && sp_uuid != sp_uuid_david) {
-        // chrome.tabs.update(tabId, { url: url.split("?sp_uuid=")[0] + "?sp_uuid=" + sp_uuid_david });
-        // return;
+        chrome.tabs.update(tabId, { url: url.split("?sp_uuid=")[0] + "?sp_uuid=" + sp_uuid_david });
+        return;
       }
       setSurveyProvider(SurveyProviders.FocusForward);
     }
