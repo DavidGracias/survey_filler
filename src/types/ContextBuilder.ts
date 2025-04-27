@@ -56,6 +56,7 @@ export default class ContextBuilder {
       ["// Utility Functions", this.utilDefinitions],
       ["// Context Variables", contextDefinitions],
       ["// Context Enums", contextEnumsDefinitions],
+      ["// Helper Tools/Variables", [`const selector = ${JSON.stringify(surveyAnswers.questionSelector)};`]],
     ];
 
     return sections

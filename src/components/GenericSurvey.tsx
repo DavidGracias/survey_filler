@@ -272,8 +272,8 @@ async function injectContext(surveyAnswer: SurveyAnswers, tabId: number) {
           unmatchedClass_Ancestor.classList.remove(classUnmatched);
       });
     }
-  ).then(() =>
-    executeScript(tabId, [injectionContext], (code) => {
+  ).finally(() =>
+    executeScript(tabId, [injectionContext, surveyAnswer.questionSelector], (code, questionSelector) => {
       // verify which functions are injected in globalThis
       const globalFunctions = Object.getOwnPropertyNames(globalThis).filter(
         (prop) => new RegExp(`\\b${prop}\\b`).test(code)

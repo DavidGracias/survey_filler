@@ -22,10 +22,11 @@ import AdlerWeiner from "../constants/AdlerWeiner";
 import FocusInsite from "../constants/FocusInsite";
 import ConsumerViewpoint from "../constants/ConsumerViewpoint";
 import { compareImages } from "../constants/util/Images";
+import { People } from "../types/InformationEnums";
 
 enum SurveyProviders {
   PRC,
-  FieldWork,
+  FocusForward,
   RecruitAndField,
   AdlerWeiner,
   FocusInsite,
@@ -36,7 +37,7 @@ enum SurveyProviders {
 
 const surveyAnswers: Record<SurveyProviders, SurveyAnswers | undefined> = {
   [SurveyProviders.PRC]: PRC,
-  [SurveyProviders.FieldWork]: PanelFox,
+  [SurveyProviders.FocusForward]: PanelFox,
   [SurveyProviders.RecruitAndField]: RecruitAndField,
   [SurveyProviders.AdlerWeiner]: AdlerWeiner,
   [SurveyProviders.FocusInsite]: FocusInsite,
@@ -62,8 +63,16 @@ export default function SurveyPicker({
   useEffect(() => {
     if (body === defaultBody) return;
 
-    if (url.includes("panelfox.io/s/FieldGoals"))
-      setSurveyProvider(SurveyProviders.FieldWork);
+    if (url.includes("panelfox.io/s/")) {
+      setSurveyProvider(SurveyProviders.FocusForward);
+      const sp_uuid = url.split("?sp_uuid=")[1];
+      const sp_uuid_david = "8a2667e0-771d-4150-b6da-cdfd9d582736";
+      if (information.person == People.David && sp_uuid != sp_uuid_david) {
+        // chrome.tabs.update(tabId, { url: url.split("?sp_uuid=")[0] + "?sp_uuid=" + sp_uuid_david });
+        // return;
+      }
+      setSurveyProvider(SurveyProviders.FocusForward);
+    }
     else if (url.includes("focusinsite.com"))
       setSurveyProvider(SurveyProviders.FocusInsite);
     else if (
