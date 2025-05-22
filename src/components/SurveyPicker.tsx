@@ -65,11 +65,21 @@ export default function SurveyPicker({
 
     if (url.includes("panelfox.io/s/")) {
       setSurveyProvider(SurveyProviders.FocusForward);
-      const sp_uuid = url.split("?sp_uuid=")[1];
-      const sp_uuid_david = "8a2667e0-771d-4150-b6da-cdfd9d582736";
-      if (information.person == People.David && sp_uuid != sp_uuid_david) {
-        chrome.tabs.update(tabId, { url: url.split("?sp_uuid=")[0] + "?sp_uuid=" + sp_uuid_david });
-        return;
+      try {
+        const urlConst = "?sp_uuid=";
+        const [urlPrefix, sp_uuid] = url.split(urlConst);
+        const sp_uuid_expected = {
+          [People.David]: "8a2667e0-771d-4150-b6da-cdfd9d582736",
+          [People.Bela]: "70714484-f0fb-46a2-b64a-57c3448be21a",
+        }[information.person];
+        if (sp_uuid != sp_uuid_expected) {
+          chrome.tabs.update(tabId, {
+            url: urlPrefix + urlConst + sp_uuid_expected,
+          });
+          return;
+        }
+      } catch (e) {
+        console.error(e);
       }
       setSurveyProvider(SurveyProviders.FocusForward);
     }
@@ -141,7 +151,7 @@ export default function SurveyPicker({
                   <ListItemText
                     primary={
                       SurveyProviders[provider] ===
-                      SurveyProviders[SurveyProviders.Unknown]
+                        SurveyProviders[SurveyProviders.Unknown]
                         ? "Unset"
                         : SurveyProviders[provider]
                     }
